@@ -24,6 +24,148 @@
     OUTROS: "OUTROS"
   };
 
+  const AREAS_VALIDAS = [
+    "SAUDE",
+    "EDUCACAO",
+    "INFRAESTRUTURA_OBRAS",
+    "EVENTOS",
+    "LOCACAO_IMOVEIS",
+    "LOCACAO_VEICULOS",
+    "ADMINISTRATIVO_OUTROS"
+  ];
+
+  const AREAS_ROTULOS = {
+    SAUDE: "Saúde",
+    EDUCACAO: "Educação",
+    INFRAESTRUTURA_OBRAS: "Infraestrutura e obras",
+    EVENTOS: "Eventos",
+    LOCACAO_IMOVEIS: "Locação de imóveis",
+    LOCACAO_VEICULOS: "Locação de veículos",
+    ADMINISTRATIVO_OUTROS: "Administrativo e outras áreas"
+  };
+
+  const AREAS_DESCRICOES = {
+    SAUDE: "Atendimento, exames, unidades e suporte clínico.",
+    EDUCACAO: "Escolas, merenda, formação e apoio escolar.",
+    INFRAESTRUTURA_OBRAS: "Obras, pavimentação, manutenção urbana e estruturas permanentes.",
+    EVENTOS: "Turismo, cultura, esporte e operação de eventos.",
+    LOCACAO_IMOVEIS: "Imóveis, built suit e espaços locados.",
+    LOCACAO_VEICULOS: "Frota, seguros, pneus, combustível e transporte.",
+    ADMINISTRATIVO_OUTROS: "Administração, assistência e serviços de apoio."
+  };
+
+  const AREA_POR_OBJETO_EXATO = {
+    "SOFTWARE DE GESTAO PUBLICA": "ADMINISTRATIVO_OUTROS",
+    "AGRICULTURA FAMILIAR": "EDUCACAO",
+    OFICINEIROS: "EDUCACAO",
+    "LIXO HOSPITALAR": "SAUDE",
+    "PROFISSIONAIS ESPORTIVOS": "EVENTOS",
+    "SISTEMA INFORMATIZADO - 1DOC": "ADMINISTRATIVO_OUTROS",
+    "TRANSPORTE DE PACIENTES": "SAUDE",
+    INTERNET: "ADMINISTRATIVO_OUTROS",
+    "LOCACAO DE EQUIP DE INFORMATICA": "ADMINISTRATIVO_OUTROS",
+    "MANUTENCAO EQUIP. DA SAUDE": "SAUDE",
+    "MANUTENCAO DE EQUIP. ODONTOLOGICOS": "SAUDE",
+    "TELEATENDIMENTO EM PEDIATRIA": "SAUDE",
+    "MANUTENCAO EQUIP. DE FISIOTERAPIA": "SAUDE",
+    TRILHAS: "EVENTOS",
+    "TRANSPORTE FLUVIAL": "LOCACAO_VEICULOS",
+    "SEGURO DE VEICULOS": "LOCACAO_VEICULOS",
+    "ARBITRAGEM FUTEBOL": "EVENTOS",
+    "MATERIAL DE ENFERMAGEM": "SAUDE",
+    "CARRO DE SOM": "EVENTOS",
+    "AQUISICAO DE MEDICAMENTOS": "SAUDE",
+    "LOCACAO MAO DE OBRA": "ADMINISTRATIVO_OUTROS",
+    "CONTROLADOR DE ACESSO": "ADMINISTRATIVO_OUTROS",
+    "GAS DE COZINHA": "ADMINISTRATIVO_OUTROS",
+    COMBUSTIVEL: "LOCACAO_VEICULOS",
+    "ELETRICA UNIDADE MISTA": "INFRAESTRUTURA_OBRAS",
+    "DADE 2018 LOTE 01": "INFRAESTRUTURA_OBRAS",
+    "DADE 2018 LOTE 02": "INFRAESTRUTURA_OBRAS",
+    "REFORMA DO CAPS": "SAUDE",
+    "UBS NOVA IGUAPE": "SAUDE",
+    "ELETRICA FESTA DE AGOSTO": "EVENTOS",
+    "FORRO IGREJA SAO BENEDITO": "INFRAESTRUTURA_OBRAS",
+    "CRECHE JARDIM PRIMAVERA": "EDUCACAO",
+    "PAVIMENTACAO JAIRE": "INFRAESTRUTURA_OBRAS",
+    "REFORMA TADASHI NAMBA": "EDUCACAO",
+    "LIMPEZA PUBLICA": "INFRAESTRUTURA_OBRAS",
+    "CONJUNTO HABITACIONAL": "INFRAESTRUTURA_OBRAS",
+    "PONTO DE ONIBUS": "INFRAESTRUTURA_OBRAS",
+    "INTERTRAVADA GUARICANA": "INFRAESTRUTURA_OBRAS",
+    "PAVIMENTACAO INTERTRAVADA": "INFRAESTRUTURA_OBRAS",
+    "PAV. CONJUNTO HABITACIONAL": "INFRAESTRUTURA_OBRAS",
+    "DRENAGEM BAIRRO GUARICANA": "INFRAESTRUTURA_OBRAS",
+    "INTERTRAVADO NOVA IGUAPE": "INFRAESTRUTURA_OBRAS",
+    "OBRAS DE ESTABILIZACAO JAIRE": "INFRAESTRUTURA_OBRAS",
+    "PEM - BANCO DO BRASIL LOTE 1": "INFRAESTRUTURA_OBRAS",
+    "PEM - BANCO DO BRASIL LOTE 2": "INFRAESTRUTURA_OBRAS",
+    "PEM - BANCO DO BRASIL LOTE 3": "INFRAESTRUTURA_OBRAS",
+    "PEM - BANCO DO BRASIL LOTE 4": "INFRAESTRUTURA_OBRAS",
+    "REVITALIZACAO DA ORLA DO MAR PEQUENO - FASE III": "INFRAESTRUTURA_OBRAS",
+    "REFORMA ESCOLA AMANCIA": "EDUCACAO",
+    "REFORMA DO GINASIO": "INFRAESTRUTURA_OBRAS",
+    "CAMPO DE FUTEBOL NA BARRA": "INFRAESTRUTURA_OBRAS",
+    "CENTRO MULTIUSO DO CANTO DO MORRO": "INFRAESTRUTURA_OBRAS",
+    "REFORMA ESCOLA ZELY": "EDUCACAO",
+    "ESF AEROPORTO": "SAUDE",
+    "REFORMA CASA DA CRIANCA": "EDUCACAO",
+    "DADE 2023": "INFRAESTRUTURA_OBRAS",
+    "REFORMA ESF ITIMIRIM": "SAUDE",
+    "REFORMA BENEDITO ROSA FASE II": "EDUCACAO",
+    "PAVIMENTACAO JUREIA": "INFRAESTRUTURA_OBRAS",
+    "CRED. INSTITUICAO FINANCEIRA": "ADMINISTRATIVO_OUTROS",
+    "CRED. PODA E ROCADA": "INFRAESTRUTURA_OBRAS",
+    "CREDENCIAMENTO ESPECIALIDADES MEDICAS (NOVO)": "SAUDE",
+    "CREDENCIAMENTO BUILT SUIT VIRGINIA CRAS": "LOCACAO_IMOVEIS",
+    "CHAMADA PUBLICA O.S": "ADMINISTRATIVO_OUTROS",
+    "CREDENCIAMENTO LIMPEZA VERAO": "INFRAESTRUTURA_OBRAS",
+    "CRED.BUILT SUIT CREAS": "LOCACAO_IMOVEIS",
+    ULTRASON: "SAUDE",
+    "EXAMES LABORATORIAIS": "SAUDE",
+    "SERVICO FUNERARIO": "ADMINISTRATIVO_OUTROS",
+    ESTRUTURAS: "EVENTOS",
+    "CAMARIM, CONTEINER ESCRITORIO": "EVENTOS",
+    PNEUS: "LOCACAO_VEICULOS",
+    SINALIZACAO: "INFRAESTRUTURA_OBRAS",
+    "MATERIAL GRAFICO": "ADMINISTRATIVO_OUTROS",
+    GELO: "EVENTOS",
+    "OLEO E LUBRIFICANTE": "LOCACAO_VEICULOS",
+    "AQUISICAO DE SUPLEMENTOS": "SAUDE",
+    OXIGENIO: "SAUDE",
+    "AQUISICAO DE UNIFORME BANDA": "EVENTOS",
+    BUFFET: "EVENTOS",
+    "CADEIRAS GIRATORIAS": "ADMINISTRATIVO_OUTROS",
+    "VAN ESPORTE": "LOCACAO_VEICULOS",
+    "EMPRESA DE ENFERMAGEM": "SAUDE",
+    "CLINICA PET": "SAUDE",
+    "JORNAL GAZETA": "EVENTOS",
+    "MOB. CASA DA JUVENTUDE": "ADMINISTRATIVO_OUTROS",
+    "MATERIAIS DE ACABAMENTO": "INFRAESTRUTURA_OBRAS",
+    "CONFECCAO DE CARNES E IPTU": "ADMINISTRATIVO_OUTROS",
+    "AQUISICAO DE AGUA MINERAL": "ADMINISTRATIVO_OUTROS",
+    "AGREGADOS MINERAIS": "INFRAESTRUTURA_OBRAS",
+    "TRASNSPORTE ESCOLAR ONIBUS": "EDUCACAO",
+    "TRANSFORME ESCOLAR KOMBI": "EDUCACAO",
+    TONNER: "ADMINISTRATIVO_OUTROS",
+    "AR CONDICIONADO": "INFRAESTRUTURA_OBRAS",
+    "AR CONDICIONADO SRP": "INFRAESTRUTURA_OBRAS",
+    TRANSBORDO: "LOCACAO_VEICULOS",
+    "FEIRA DE GASTRONOMIA": "EVENTOS",
+    "BANHEIRO QUIMICO": "EVENTOS",
+    "EQUIPAMENTOS SUSTENTAVEL": "INFRAESTRUTURA_OBRAS",
+    "LEVANTAMENTO PETROLEO": "ADMINISTRATIVO_OUTROS"
+  };
+
+  const PALAVRAS_CHAVE_AREA = {
+    SAUDE: ["UBS", "CAPS", "ESF", "SAUDE", "ENFERMAG", "MEDIC", "ODONTO", "FISIOTERAP", "PEDIATR", "LABORAT", "OXIGEN"],
+    EDUCACAO: ["ESCOLA", "CRECHE", "ESCOLAR", "FORMACAO EDUCACIONAL", "MERENDA", "BANDA"],
+    INFRAESTRUTURA_OBRAS: ["PAVIMENT", "DRENAGEM", "OBRA", "REFORMA", "REVITALIZ", "INTERTRAV", "HABITACIONAL", "PONTO DE ONIBUS", "ACABAMENTO", "AGREGADOS", "SINALIZACAO", "LIMPEZA PUBLICA"],
+    EVENTOS: ["EVENTO", "FESTA", "FEIRA", "CAMARIM", "BUFFET", "GELO", "BANHEIRO QUIMICO", "CARRO DE SOM", "TRILHAS", "ARBITRAGEM", "ESTRUTURAS"],
+    LOCACAO_IMOVEIS: ["BUILT SUIT"],
+    LOCACAO_VEICULOS: ["PNEU", "COMBUST", "LUBRIFIC", "OLEO", "VEICUL", "TRANSBORDO", "TRANSPORTE FLUVIAL", "TRANSPORTE COLETIVO"]
+  };
+
   const ORDEM_SITUACAO = {
     urgente: 0,
     atencao: 1,
@@ -45,6 +187,7 @@
     modalidade: "modalidade",
     tipo: "tipo",
     ano: "ano",
+    area: "area",
     situacao: "situacao",
     ordenacao: "ordenacao",
     busca: "busca"
@@ -82,8 +225,10 @@
     fatoCategoriasMeta: document.getElementById("fato-categorias-meta"),
     resumoGeral: document.getElementById("resumo-geral"),
     resumoFiltros: document.getElementById("resumo-filtros"),
+    resumoAreas: document.getElementById("resumo-areas"),
     mensagemStatus: document.getElementById("mensagem-status"),
     estadoVazio: document.getElementById("estado-vazio"),
+    gradeAreas: document.getElementById("grade-areas"),
     navCategorias: document.getElementById("nav-categorias"),
     listaVencimentos: document.getElementById("lista-vencimentos"),
     listaPendencias: document.getElementById("lista-pendencias"),
@@ -105,6 +250,7 @@
       modalidade: document.getElementById("filtro-modalidade"),
       tipo: document.getElementById("filtro-tipo"),
       ano: document.getElementById("filtro-ano"),
+      area: document.getElementById("filtro-area"),
       situacao: document.getElementById("filtro-situacao"),
       ordenacao: document.getElementById("filtro-ordenacao"),
       busca: document.getElementById("filtro-busca")
@@ -132,6 +278,7 @@
       modalidade: "",
       tipo: "",
       ano: "",
+      area: "",
       situacao: "",
       ordenacao: "risco",
       busca: ""
@@ -297,13 +444,69 @@
     return CATEGORIAS_ROTULOS[valor] || valor || CATEGORIAS_ROTULOS.OUTROS;
   }
 
+  function rotuloArea(valor) {
+    return AREAS_ROTULOS[valor] || AREAS_ROTULOS.ADMINISTRATIVO_OUTROS;
+  }
+
+  function descricaoArea(valor) {
+    return AREAS_DESCRICOES[valor] || AREAS_DESCRICOES.ADMINISTRATIVO_OUTROS;
+  }
+
   function obterCategoriaNormalizada(categoria) {
     const normalizada = normalizarTexto(categoria);
     return CATEGORIAS_VALIDAS.includes(normalizada) ? normalizada : "OUTROS";
   }
 
+  function contemAlgumaExpressao(texto, expressoes) {
+    return expressoes.some(function (expressao) {
+      return texto.includes(expressao);
+    });
+  }
+
+  function inferirAreaTematica(item) {
+    const objeto = normalizarTexto(item.objeto);
+    const categoria = normalizarTexto(item.categoriaOriginal || item.categoria);
+
+    if (categoria === "LOCACAO") {
+      return "LOCACAO_IMOVEIS";
+    }
+
+    if (AREA_POR_OBJETO_EXATO[objeto]) {
+      return AREA_POR_OBJETO_EXATO[objeto];
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.LOCACAO_IMOVEIS)) {
+      return "LOCACAO_IMOVEIS";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.SAUDE)) {
+      return "SAUDE";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.EDUCACAO)) {
+      return "EDUCACAO";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.INFRAESTRUTURA_OBRAS)) {
+      return "INFRAESTRUTURA_OBRAS";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.EVENTOS)) {
+      return "EVENTOS";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.LOCACAO_VEICULOS)) {
+      return "LOCACAO_VEICULOS";
+    }
+
+    return "ADMINISTRATIVO_OUTROS";
+  }
+
   function comporIndiceBusca(item) {
     return normalizarTexto([
+      rotuloArea(item.area),
+      item.categoriaOriginal,
+      rotuloCategoria(item.categoria),
       item.numero,
       item.fornecedor,
       item.objeto,
@@ -336,6 +539,8 @@
       observacoes: String(item.observacoes || "").trim(),
       gestor_fiscal: String(item.gestor_fiscal || "").trim()
     };
+
+    contratoBase.area = inferirAreaTematica(contratoBase);
 
     const situacao = obterSituacaoContrato(contratoBase, state.referencia);
 
@@ -371,12 +576,21 @@
 
     valores.forEach(function (valor) {
       const opcao = document.createElement("option");
-      opcao.value = valor;
-      opcao.textContent = valor;
+      if (valor && typeof valor === "object") {
+        opcao.value = String(valor.value || "");
+        opcao.textContent = String(valor.label || valor.value || "");
+      } else {
+        opcao.value = valor;
+        opcao.textContent = valor;
+      }
       elemento.appendChild(opcao);
     });
 
-    elemento.value = valorAtual && valores.includes(valorAtual) ? valorAtual : "";
+    const valoresDisponiveis = valores.map(function (valor) {
+      return valor && typeof valor === "object" ? String(valor.value || "") : String(valor);
+    });
+
+    elemento.value = valorAtual && valoresDisponiveis.includes(valorAtual) ? valorAtual : "";
   }
 
   function preencherFiltros() {
@@ -400,10 +614,22 @@
       return b - a;
     }).map(String);
 
+    const areas = AREAS_VALIDAS.filter(function (area) {
+      return state.contratos.some(function (contrato) {
+        return contrato.area === area;
+      });
+    }).map(function (area) {
+      return {
+        value: area,
+        label: rotuloArea(area)
+      };
+    });
+
     popularSelect(DOM.filtros.processo, processos, "Todos os processos");
     popularSelect(DOM.filtros.modalidade, modalidades, "Todas as modalidades");
     popularSelect(DOM.filtros.tipo, tipos, "Todos os tipos");
     popularSelect(DOM.filtros.ano, anos, "Todos os anos");
+    popularSelect(DOM.filtros.area, areas, "Todas as áreas");
   }
 
   function obterCoberturaAnos(contratos) {
@@ -435,13 +661,13 @@
     DOM.fatoCobertura.textContent = obterCoberturaAnos(state.contratos);
     DOM.fatoCoberturaMeta.textContent = "Intervalo anual encontrado no cadastro";
 
-    const categoriasComDados = new Set(state.contratos.map(function (contrato) {
-      return contrato.categoria;
+    const areasComDados = new Set(state.contratos.map(function (contrato) {
+      return contrato.area;
     })).size;
-    DOM.fatoCategorias.textContent = String(categoriasComDados);
-    DOM.fatoCategoriasMeta.textContent = categoriasComDados === 1
-      ? "1 categoria com contratos"
-      : categoriasComDados + " categorias com contratos";
+    DOM.fatoCategorias.textContent = String(areasComDados);
+    DOM.fatoCategoriasMeta.textContent = areasComDados === 1
+      ? "1 área temática com contratos"
+      : areasComDados + " áreas temáticas com contratos";
   }
 
   function obterFiltrosDoDom() {
@@ -450,6 +676,7 @@
       modalidade: DOM.filtros.modalidade.value,
       tipo: DOM.filtros.tipo.value,
       ano: DOM.filtros.ano.value,
+      area: DOM.filtros.area.value,
       situacao: DOM.filtros.situacao.value,
       ordenacao: DOM.filtros.ordenacao.value || "risco",
       busca: DOM.filtros.busca.value.trim()
@@ -461,6 +688,7 @@
     DOM.filtros.modalidade.value = state.filtros.modalidade;
     DOM.filtros.tipo.value = state.filtros.tipo;
     DOM.filtros.ano.value = state.filtros.ano;
+    DOM.filtros.area.value = state.filtros.area;
     DOM.filtros.situacao.value = state.filtros.situacao;
     DOM.filtros.ordenacao.value = state.filtros.ordenacao;
     DOM.filtros.busca.value = state.filtros.busca;
@@ -512,6 +740,10 @@
     }
 
     if (filtros.ano && String(contrato.ano) !== filtros.ano) {
+      return false;
+    }
+
+    if (filtros.area && contrato.area !== filtros.area) {
       return false;
     }
 
@@ -612,6 +844,33 @@
     return mapa;
   }
 
+  function agruparPorArea(contratos) {
+    const mapa = new Map();
+
+    AREAS_VALIDAS.forEach(function (area) {
+      mapa.set(area, []);
+    });
+
+    contratos.forEach(function (contrato) {
+      if (!mapa.has(contrato.area)) {
+        mapa.set(contrato.area, []);
+      }
+      mapa.get(contrato.area).push(contrato);
+    });
+
+    return mapa;
+  }
+
+  function obterContratosParaGradeAreas() {
+    const filtrosSemArea = Object.assign({}, state.filtros, {
+      area: ""
+    });
+
+    return state.contratos.filter(function (contrato) {
+      return contratoAtendeFiltros(contrato, filtrosSemArea);
+    });
+  }
+
   function formatarResumoDias(diasRestantes) {
     if (diasRestantes === null) {
       return "Sem vigência informada";
@@ -697,6 +956,84 @@
       metricas.total +
       (metricas.total === 1 ? " contrato visível" : " contratos visíveis") +
       ", ordenado por " + rotuloOrdenacao(state.filtros.ordenacao).toLowerCase() + ".";
+  }
+
+  function criarChipArea(texto) {
+    const chip = document.createElement("span");
+    chip.className = "area-card__fact";
+    chip.textContent = texto;
+    return chip;
+  }
+
+  function renderizarGradeAreas() {
+    const contratosBase = obterContratosParaGradeAreas();
+    const grupos = agruparPorArea(contratosBase);
+    const totalBase = contratosBase.length;
+
+    DOM.gradeAreas.replaceChildren();
+    DOM.resumoAreas.textContent = totalBase
+      ? "Os cards abaixo respeitam os filtros atuais e ajudam a alternar a leitura por área temática."
+      : "Nenhum contrato atende aos filtros atuais; ajuste o recorte para visualizar as áreas mapeadas.";
+
+    AREAS_VALIDAS.forEach(function (area) {
+      const contratos = ordenarContratos(grupos.get(area) || []);
+      const botao = document.createElement("button");
+      const topo = document.createElement("div");
+      const titulo = document.createElement("strong");
+      const contador = document.createElement("span");
+      const descricao = document.createElement("p");
+      const fatos = document.createElement("div");
+      const valorTotal = contratos.reduce(function (acumulado, contrato) {
+        return acumulado + (Number(contrato.valor) || 0);
+      }, 0);
+      const urgentes = contratos.filter(function (contrato) {
+        return contrato.situacao.chave === "urgente";
+      }).length;
+      const categoriasInternas = new Set(contratos.map(function (contrato) {
+        return contrato.categoria;
+      })).size;
+
+      botao.type = "button";
+      botao.className = "area-card";
+      if (state.filtros.area === area) {
+        botao.classList.add("is-active");
+      }
+      if (!contratos.length && state.filtros.area !== area) {
+        botao.disabled = true;
+      }
+
+      topo.className = "area-card__topline";
+      titulo.className = "area-card__title";
+      contador.className = "area-card__count";
+      descricao.className = "area-card__description";
+      fatos.className = "area-card__facts";
+
+      titulo.textContent = rotuloArea(area);
+      contador.textContent = String(contratos.length);
+      descricao.textContent = descricaoArea(area);
+
+      fatos.appendChild(criarChipArea(formatarMoeda(valorTotal)));
+      fatos.appendChild(criarChipArea(
+        urgentes + (urgentes === 1 ? " urgente" : " urgentes")
+      ));
+      fatos.appendChild(criarChipArea(
+        categoriasInternas + (categoriasInternas === 1 ? " categoria" : " categorias")
+      ));
+
+      topo.appendChild(titulo);
+      topo.appendChild(contador);
+      botao.appendChild(topo);
+      botao.appendChild(descricao);
+      botao.appendChild(fatos);
+      botao.setAttribute("aria-pressed", state.filtros.area === area ? "true" : "false");
+
+      botao.addEventListener("click", function () {
+        DOM.filtros.area.value = state.filtros.area === area ? "" : area;
+        atualizarPainel();
+      });
+
+      DOM.gradeAreas.appendChild(botao);
+    });
   }
 
   function rotuloOrdenacao(chave) {
@@ -901,7 +1238,7 @@
     return badge;
   }
 
-  function criarTabelaCategoria(categoria, contratos, totalVisivel) {
+  function criarTabelaArea(area, contratos, totalVisivel) {
     const colunas = [
       "Contrato",
       "Objeto",
@@ -930,10 +1267,13 @@
     const urgentes = contratos.filter(function (contrato) {
       return contrato.situacao.chave === "urgente";
     }).length;
+    const categoriasInternas = new Set(contratos.map(function (contrato) {
+      return contrato.categoria;
+    })).size;
     const percentual = totalVisivel ? Math.round((contratos.length / totalVisivel) * 100) : 0;
 
     secao.className = "category-section";
-    secao.id = "categoria-" + slugify(categoria);
+    secao.id = "area-" + slugify(area);
     cabecalho.className = "category-section__head";
     titulo.className = "category-section__title";
     meta.className = "category-section__meta";
@@ -943,13 +1283,14 @@
     tabela.className = "contracts-table";
     nota.className = "results-note";
 
-    titulo.textContent = rotuloCategoria(categoria);
+    titulo.textContent = rotuloArea(area);
     meta.textContent = contratos.length + (contratos.length === 1 ? " contrato" : " contratos") +
-      " nesta categoria • " + percentual + "% do recorte";
+      " nesta área • " + percentual + "% do recorte";
 
     [
       contratos.length + " visíveis",
       formatarMoeda(totalValor),
+      categoriasInternas + (categoriasInternas === 1 ? " categoria interna" : " categorias internas"),
       urgentes + " em risco imediato"
     ].forEach(function (texto) {
       const pill = document.createElement("span");
@@ -960,9 +1301,9 @@
 
     botaoExportar.type = "button";
     botaoExportar.className = "button button--section";
-    botaoExportar.textContent = "Exportar categoria";
+    botaoExportar.textContent = "Exportar área";
     botaoExportar.addEventListener("click", function () {
-      exportarCategoria(categoria);
+      exportarArea(area);
     });
 
     blocoTitulo.appendChild(titulo);
@@ -1074,16 +1415,16 @@
   function renderizarNavegacao(grupos) {
     DOM.navCategorias.replaceChildren();
 
-    const categorias = Array.from(grupos.entries()).filter(function (entrada) {
+    const areas = Array.from(grupos.entries()).filter(function (entrada) {
       return entrada[1].length > 0;
     });
 
-    if (!categorias.length) {
+    if (!areas.length) {
       return;
     }
 
-    categorias.forEach(function (entrada, indice) {
-      const categoria = entrada[0];
+    areas.forEach(function (entrada, indice) {
+      const area = entrada[0];
       const contratos = entrada[1];
       const botao = document.createElement("button");
 
@@ -1093,9 +1434,9 @@
         botao.classList.add("is-active");
       }
 
-      botao.dataset.target = "categoria-" + slugify(categoria);
+      botao.dataset.target = "area-" + slugify(area);
       botao.innerHTML =
-        "<span>" + rotuloCategoria(categoria) + "</span>" +
+        "<span>" + rotuloArea(area) + "</span>" +
         "<span class='category-nav__count'>" + contratos.length + "</span>";
 
       botao.addEventListener("click", function () {
@@ -1149,23 +1490,23 @@
   }
 
   function renderizarSecoes() {
-    const grupos = agruparPorCategoria(ordenarContratos(state.filtrados));
-    const categoriasComDados = Array.from(grupos.entries()).filter(function (entrada) {
+    const grupos = agruparPorArea(ordenarContratos(state.filtrados));
+    const areasComDados = Array.from(grupos.entries()).filter(function (entrada) {
       return entrada[1].length > 0;
     });
 
     DOM.secoesCategorias.replaceChildren();
-    DOM.estadoVazio.hidden = categoriasComDados.length > 0;
+    DOM.estadoVazio.hidden = areasComDados.length > 0;
 
     renderizarNavegacao(grupos);
 
-    if (!categoriasComDados.length) {
+    if (!areasComDados.length) {
       observarSecoes();
       return;
     }
 
-    categoriasComDados.forEach(function (entrada) {
-      DOM.secoesCategorias.appendChild(criarTabelaCategoria(entrada[0], entrada[1], state.filtrados.length));
+    areasComDados.forEach(function (entrada) {
+      DOM.secoesCategorias.appendChild(criarTabelaArea(entrada[0], entrada[1], state.filtrados.length));
     });
 
     observarSecoes();
@@ -1195,7 +1536,7 @@
   }
 
   function preencherDrawer(contrato) {
-    DOM.drawerCategoria.textContent = contrato.categoriaOriginal || rotuloCategoria(contrato.categoria);
+    DOM.drawerCategoria.textContent = rotuloArea(contrato.area);
     DOM.drawerTitulo.textContent = contrato.numero || "Contrato sem numero";
     DOM.drawerObjeto.textContent = contrato.objeto || "Objeto não informado.";
     DOM.drawerSituacao.className = "status-badge status-badge--" + contrato.situacao.chave;
@@ -1203,6 +1544,8 @@
     DOM.drawerStatusExcel.textContent = contrato.status_excel || "Sem status no Excel";
     DOM.drawerGrid.replaceChildren();
 
+    adicionarItemDrawer("Área temática", rotuloArea(contrato.area));
+    adicionarItemDrawer("Categoria licitatória", contrato.categoriaOriginal || rotuloCategoria(contrato.categoria));
     adicionarItemDrawer("Fornecedor", contrato.fornecedor || "Não informado");
     adicionarItemDrawer("Processo", contrato.processo || "Não informado");
     adicionarItemDrawer("Modalidade", contrato.modalidade || "Não informada");
@@ -1251,6 +1594,7 @@
 
   function obterCabecalhosCsv() {
     return [
+      "Área temática",
       "Categoria",
       "Ano",
       "Número",
@@ -1278,6 +1622,7 @@
 
   function obterLinhaCsv(contrato) {
     return [
+      rotuloArea(contrato.area),
       contrato.categoriaOriginal || rotuloCategoria(contrato.categoria),
       contrato.ano || "",
       contrato.numero || "",
@@ -1327,19 +1672,19 @@
     mostrarMensagem("CSV do recorte atual gerado com sucesso.", "info");
   }
 
-  function exportarCategoria(categoria) {
+  function exportarArea(area) {
     const contratos = ordenarContratos(state.filtrados.filter(function (contrato) {
-      return contrato.categoria === categoria;
+      return contrato.area === area;
     }));
 
     if (!contratos.length) {
-      mostrarMensagem("Não há contratos visíveis nesta categoria para exportar.", "info");
+      mostrarMensagem("Não há contratos visíveis nesta área para exportar.", "info");
       return;
     }
 
     const linhas = [obterCabecalhosCsv()].concat(contratos.map(obterLinhaCsv));
-    baixarCsv("contratos-" + slugify(categoria) + ".csv", linhas);
-    mostrarMensagem("CSV da categoria gerado com sucesso.", "info");
+    baixarCsv("contratos-" + slugify(area) + ".csv", linhas);
+    mostrarMensagem("CSV da área gerado com sucesso.", "info");
   }
 
   function atualizarPainel() {
@@ -1350,6 +1695,7 @@
     });
 
     atualizarMetricas();
+    renderizarGradeAreas();
     preencherListaVencimentos();
     preencherListaPendencias();
     preencherDistribuicao();
@@ -1363,6 +1709,7 @@
       modalidade: "",
       tipo: "",
       ano: "",
+      area: "",
       situacao: "",
       ordenacao: "risco",
       busca: ""

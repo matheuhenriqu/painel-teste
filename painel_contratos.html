@@ -87,9 +87,9 @@
         </article>
 
         <article class="fact-card">
-          <span class="fact-card__label">Categorias ativas</span>
+          <span class="fact-card__label">Áreas mapeadas</span>
           <strong class="fact-card__value" id="fato-categorias">0</strong>
-          <span class="fact-card__meta" id="fato-categorias-meta">Grupos com contratos cadastrados</span>
+          <span class="fact-card__meta" id="fato-categorias-meta">Frentes temáticas com contratos cadastrados</span>
         </article>
       </aside>
     </div>
@@ -183,6 +183,13 @@
             </label>
 
             <label class="field">
+              <span>Área temática</span>
+              <select id="filtro-area" name="area">
+                <option value="">Todas as áreas</option>
+              </select>
+            </label>
+
+            <label class="field">
               <span>Situação</span>
               <select id="filtro-situacao" name="situacao">
                 <option value="">Todas as situações</option>
@@ -255,7 +262,7 @@
             <div class="insight-card__head">
               <div>
                 <p class="section-heading__eyebrow">Distribuicao</p>
-                <h3>Distribuição por categoria</h3>
+                <h3>Distribuição por categoria licitatória</h3>
               </div>
               <span class="insight-card__tag">Volume</span>
             </div>
@@ -264,7 +271,21 @@
         </div>
       </section>
 
-      <nav class="category-nav reveal reveal--delay-4" aria-label="Navegação por categorias">
+      <section class="area-board reveal reveal--delay-4" aria-labelledby="titulo-areas">
+        <div class="section-heading">
+          <div>
+            <p class="section-heading__eyebrow">Separação Temática</p>
+            <h2 id="titulo-areas">Contratos por área da administração</h2>
+          </div>
+          <p class="section-heading__copy" id="resumo-areas">
+            Cada contrato é classificado pela finalidade predominante para facilitar a leitura por secretaria, tema ou frente de atuação.
+          </p>
+        </div>
+
+        <div id="grade-areas" class="area-grid"></div>
+      </section>
+
+      <nav class="category-nav reveal reveal--delay-4" aria-label="Navegação por áreas temáticas">
         <div class="category-nav__scroll" id="nav-categorias"></div>
       </nav>
 
@@ -272,10 +293,10 @@
         <div class="section-heading">
           <div>
             <p class="section-heading__eyebrow">Listagem</p>
-            <h2 id="titulo-resultados">Contratos organizados por categoria</h2>
+            <h2 id="titulo-resultados">Contratos organizados por área temática</h2>
           </div>
           <p class="section-heading__copy">
-            Cada tabela usa o mesmo recorte global e permite abrir detalhes completos do contrato.
+            As tabelas abaixo seguem o recorte global, mas agora priorizam a leitura por área e mantêm a categoria licitatória visível em cada contrato.
           </p>
         </div>
 
