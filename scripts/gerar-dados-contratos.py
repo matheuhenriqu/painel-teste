@@ -27,6 +27,7 @@ STATUS_ORDER = (
     "LICITANDO",
     "EM ANDAMENTO",
 )
+MODALITY_HINTS = ("PP", "PE", "PR-E", "PRE", "CE", "CP", "CH", "CC", "INEX")
 
 
 @dataclass
@@ -196,6 +197,83 @@ def parse_value(raw_value: str) -> tuple[float, str]:
         return 0.0, text
 
 
+def has_letters(value: str) -> bool:
+    return any(char.isalpha() for char in normalize_text(value))
+
+
+def normalize_modality(value: str) -> str:
+    text = normalize_text(value)
+    if not text:
+        return ""
+    return re.sub(r"(?<=[A-Za-z])(?=\d{3}/\d{4})", " ", text)
+
+
+def text_score(value: str) -> int:
+    text = normalize_text(value)
+    if not text:
+        return -1
+
+    score = len(text)
+    if has_letters(text):
+        score += 20
+    if any(hint in normalize_lookup(text) for hint in MODALITY_HINTS):
+        score += 10
+    if re.search(r"\d{2,}/\d{4}", text):
+        score += 4
+    return score
+
+
+def pick_text(current: str, candidate: str) -> str:
+    current_text = normalize_text(current)
+    candidate_text = normalize_text(candidate)
+
+    if text_score(candidate_text) > text_score(current_text):
+        return candidate_text
+    return current_text
+
+
+def pick_date(current: str, candidate: str, prefer_latest: bool) -> str:
+    current_text = normalize_text(current)
+    candidate_text = normalize_text(candidate)
+
+    if not current_text:
+        return candidate_text
+    if not candidate_text:
+        return current_text
+    if prefer_latest:
+        return max(current_text, candidate_text)
+    return min(current_text, candidate_text)
+
+
+def merge_notes(*parts: str) -> str:
+    merged: List[str] = []
+    seen = set()
+
+    for part in parts:
+        text = normalize_text(part)
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        merged.append(text)
+
+    return " | ".join(merged)
+
+
+def extract_date_notes(start_raw: str, end_raw: str, existing_notes: str = "") -> str:
+    notes: List[str] = []
+    existing_lookup = normalize_lookup(existing_notes)
+
+    for label, raw in (("Inicio", start_raw), ("Vencimento", end_raw)):
+        text = normalize_text(raw)
+        if not text or excel_serial_to_iso(text) or detect_status_from_text(text):
+            continue
+        if normalize_lookup(text) in existing_lookup:
+            continue
+        notes.append(f"{label}: {text}")
+
+    return " | ".join(notes)
+
+
 def detect_status_from_text(text: str) -> str:
     lookup = normalize_lookup(text)
     if "SUSPENSO" in lookup:
@@ -238,19 +316,47 @@ def join_manager_and_inspector(manager: str, inspector: str) -> str:
     manager_value = normalize_text(manager)
     inspector_value = normalize_text(inspector)
     if manager_value:
-        parts.append("GESTOR: " + manager_value)
+        if normalize_lookup(manager_value).startswith("GESTOR:"):
+            parts.append(manager_value)
+        else:
+            parts.append("GESTOR: " + manager_value)
     if inspector_value:
-        parts.append("FISCAL: " + inspector_value)
+        if normalize_lookup(inspector_value).startswith("FISCAL:"):
+            parts.append(inspector_value)
+        else:
+            parts.append("FISCAL: " + inspector_value)
     return " | ".join(parts)
 
 
 def convert_row(row: Dict[str, str]) -> Dict[str, object]:
+    raw_modality = normalize_modality(row.get("B", ""))
     contract_number = normalize_text(row.get("E", ""))
-    supplier = normalize_text(row.get("G", ""))
+    raw_value = normalize_text(row.get("F", ""))
+    raw_supplier = normalize_text(row.get("G", ""))
+    value, value_text = parse_value(raw_value)
+    supplier = raw_supplier
+
+    # Some worksheet lines have company/value columns swapped; fix only when the pattern is unambiguous.
+    if value_text and raw_supplier and not has_letters(raw_supplier):
+        swapped_value, swapped_value_text = parse_value(raw_supplier)
+        if swapped_value > 0 and not swapped_value_text:
+            supplier = raw_value
+            value = swapped_value
+            value_text = ""
+
     if detect_status_from_text(supplier) and not contract_number:
         supplier = ""
 
-    value, value_text = parse_value(row.get("F", ""))
+    start_date = excel_serial_to_iso(row.get("H", ""))
+    end_date = excel_serial_to_iso(row.get("I", ""))
+    if start_date and end_date and start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    base_notes = normalize_text(row.get("J", ""))
+    notes = merge_notes(
+        base_notes,
+        extract_date_notes(row.get("H", ""), row.get("I", ""), base_notes),
+    )
 
     return {
         "ano": infer_year(contract_number, row.get("B", ""), row.get("D", "")),
@@ -259,16 +365,82 @@ def convert_row(row: Dict[str, str]) -> Dict[str, object]:
         "objeto": normalize_text(row.get("C", "")),
         "processo": normalize_text(row.get("D", "")),
         "categoria": normalize_text(row.get("A", "")),
-        "modalidade": normalize_text(row.get("B", "")),
+        "modalidade": raw_modality,
         "tipo": infer_type(contract_number),
         "valor": value,
         "valor_texto": value_text,
-        "inicio_vigencia": excel_serial_to_iso(row.get("H", "")),
-        "fim_vigencia": excel_serial_to_iso(row.get("I", "")),
+        "inicio_vigencia": start_date,
+        "fim_vigencia": end_date,
         "status_excel": detect_status(row),
-        "observacoes": normalize_text(row.get("J", "")),
+        "observacoes": notes,
         "gestor_fiscal": join_manager_and_inspector(row.get("K", ""), row.get("L", "")),
     }
+
+
+def merge_contracts(primary: Dict[str, object], candidate: Dict[str, object]) -> Dict[str, object]:
+    merged = dict(primary)
+    merged["ano"] = max(int(value) for value in (primary.get("ano"), candidate.get("ano")) if isinstance(value, int)) if any(isinstance(value, int) for value in (primary.get("ano"), candidate.get("ano"))) else ""
+    merged["numero"] = pick_text(str(primary.get("numero", "")), str(candidate.get("numero", "")))
+    merged["fornecedor"] = pick_text(str(primary.get("fornecedor", "")), str(candidate.get("fornecedor", "")))
+    merged["objeto"] = pick_text(str(primary.get("objeto", "")), str(candidate.get("objeto", "")))
+    merged["processo"] = pick_text(str(primary.get("processo", "")), str(candidate.get("processo", "")))
+    merged["categoria"] = pick_text(str(primary.get("categoria", "")), str(candidate.get("categoria", "")))
+    merged["modalidade"] = pick_text(str(primary.get("modalidade", "")), str(candidate.get("modalidade", "")))
+    merged["tipo"] = pick_text(str(primary.get("tipo", "")), str(candidate.get("tipo", "")))
+    merged["valor"] = max(float(primary.get("valor", 0) or 0), float(candidate.get("valor", 0) or 0))
+    merged["valor_texto"] = pick_text(str(primary.get("valor_texto", "")), str(candidate.get("valor_texto", "")))
+    merged["inicio_vigencia"] = pick_date(str(primary.get("inicio_vigencia", "")), str(candidate.get("inicio_vigencia", "")), prefer_latest=False)
+    merged["fim_vigencia"] = pick_date(str(primary.get("fim_vigencia", "")), str(candidate.get("fim_vigencia", "")), prefer_latest=True)
+    merged["status_excel"] = pick_text(str(primary.get("status_excel", "")), str(candidate.get("status_excel", "")))
+    merged["observacoes"] = merge_notes(str(primary.get("observacoes", "")), str(candidate.get("observacoes", "")))
+    merged["gestor_fiscal"] = pick_text(str(primary.get("gestor_fiscal", "")), str(candidate.get("gestor_fiscal", "")))
+    return merged
+
+
+def dedupe_contracts(contracts: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    grouped: Dict[tuple[str, str, str], List[Dict[str, object]]] = {}
+    emitted_keys = set()
+    result: List[Dict[str, object]] = []
+
+    for contract in contracts:
+        process = normalize_text(contract.get("processo", ""))
+        number = normalize_text(contract.get("numero", ""))
+        key = (
+            normalize_text(contract.get("categoria", "")),
+            process,
+            number,
+        )
+
+        if not process and not number:
+            continue
+
+        if key not in grouped:
+            grouped[key] = []
+        grouped[key].append(contract)
+
+    for contract in contracts:
+        process = normalize_text(contract.get("processo", ""))
+        number = normalize_text(contract.get("numero", ""))
+        if not process and not number:
+            result.append(contract)
+            continue
+
+        key = (
+            normalize_text(contract.get("categoria", "")),
+            process,
+            number,
+        )
+        if key in emitted_keys:
+            continue
+
+        emitted_keys.add(key)
+        group = grouped[key]
+        merged = group[0]
+        for candidate in group[1:]:
+            merged = merge_contracts(merged, candidate)
+        result.append(merged)
+
+    return result
 
 
 def generate_payload(workbook_path: Path) -> Dict[str, object]:
@@ -280,7 +452,7 @@ def generate_payload(workbook_path: Path) -> Dict[str, object]:
         shared_strings = load_shared_strings(archive)
         rows = list(iter_sheet_rows(archive, sheets[0].path, shared_strings))
 
-    contracts = [convert_row(row) for row in rows]
+    contracts = dedupe_contracts([convert_row(row) for row in rows])
     return {
         "ultimaAtualizacao": datetime.fromtimestamp(workbook_path.stat().st_mtime).strftime("%Y-%m-%dT%H:%M:%S"),
         "origemArquivo": workbook_path.name,
