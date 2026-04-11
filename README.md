@@ -2,28 +2,26 @@
 
 Painel estatico para consulta e acompanhamento de contratos administrativos da Prefeitura Municipal de Iguape/SP.
 
-Todos os dados publicados no site sao gerados a partir de uma planilha Excel mantida fora do repositorio.
+Todos os dados publicados no site sao gerados a partir de uma unica planilha Excel mantida fora do repositorio.
 
 ## Estrutura
 
 - `index.html`: entrada usada pelo GitHub Pages.
-- `painel_contratos.html`: painel principal.
+- `painel_contratos.html`: pagina principal com a estrutura do painel.
+- `styles/painel.css`: camada visual responsiva do painel.
+- `scripts/painel.js`: logica de filtros, metricas, listagens e exportacao.
 - `contratos-data.js`: base de dados gerada a partir da planilha Excel.
-- `scripts/gerar-dados-contratos.ps1`: gerador oficial dos dados.
+- `scripts/gerar-dados-contratos.py`: gerador oficial dos dados a partir do workbook consolidado.
+- `scripts/gerar-dados-contratos.ps1`: gerador legado do layout antigo.
 - `.gitignore`: impede o versionamento da planilha e de arquivos temporarios.
 
 ## Atualizar os dados
 
-1. Atualize a planilha Excel de controle de prazos.
-2. Gere o arquivo de dados com um destes formatos:
+1. Atualize a planilha Excel consolidada de controle de prazos.
+2. Gere o arquivo de dados informando explicitamente o workbook:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\gerar-dados-contratos.ps1 -WorkbookPath "CAMINHO\PARA\CONTROLE DE PRAZOS 2026.xlsx"
-```
-
-```powershell
-# Se a planilha estiver na raiz do projeto, o script localiza automaticamente o primeiro .xlsx valido.
-powershell -ExecutionPolicy Bypass -File .\scripts\gerar-dados-contratos.ps1
+```bash
+python3 scripts/gerar-dados-contratos.py --workbook "/caminho/para/CONTROLE_DE_PRAZOS_ORGANIZADO.xlsx"
 ```
 
 3. Revise o arquivo `contratos-data.js`.
@@ -31,12 +29,20 @@ powershell -ExecutionPolicy Bypass -File .\scripts\gerar-dados-contratos.ps1
 
 ## O que o gerador faz
 
-- Le as 8 abas da planilha.
+- Le a aba consolidada do workbook.
 - Normaliza datas para `YYYY-MM-DD`.
-- Corrige a alternancia entre fornecedor e valor na aba `PREGAO ELETRONICO`.
 - Preserva `status_excel` e `valor_texto` quando o valor original nao e numerico.
+- Consolida gestor e fiscal em um unico campo textual.
 - Deriva `tipo` automaticamente como `Ata` ou `Contrato`.
 - Escreve `window.PAINEL_CONTRATOS_DATA = { ultimaAtualizacao, origemArquivo, contratos }`, expondo apenas o nome do arquivo de origem.
+
+## Interface
+
+- Hero com resumo executivo e metadados da base.
+- Filtros globais com sincronizacao na URL.
+- Indicadores do recorte atual.
+- Radar de vencimentos, pendencias de vigencia e distribuicao por categoria.
+- Tabelas por categoria com drawer de detalhes e exportacao em CSV.
 
 ## Publicacao
 
