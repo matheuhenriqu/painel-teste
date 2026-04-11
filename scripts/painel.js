@@ -425,7 +425,9 @@
       ? "Atualizado em " + formatadorDataHora.format(new Date(state.ultimaAtualizacao))
       : "Data de atualização não informada";
 
-    DOM.metaOrigem.textContent = state.origemArquivo || "Não informado";
+    if (DOM.metaOrigem) {
+      DOM.metaOrigem.textContent = state.origemArquivo || "Não informado";
+    }
     DOM.fatoTotalCadastro.textContent = String(state.contratos.length);
     DOM.fatoTotalCadastroMeta.textContent = state.contratos.length === 1
       ? "1 contrato registrado na base"

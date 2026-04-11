@@ -160,26 +160,6 @@ a {
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.18));
 }
 
-.hero__masthead-text {
-  display: grid;
-  gap: 4px;
-}
-
-.hero__masthead-eyebrow {
-  margin: 0;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.76);
-}
-
-.hero__masthead-text strong {
-  font-size: clamp(1.1rem, 2.2vw, 1.55rem);
-  line-height: 1.2;
-  font-weight: 700;
-}
-
 .hero__masthead-note {
   max-width: 34ch;
   margin: 0;
@@ -338,7 +318,7 @@ a {
 
 .hero__meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
   margin: 24px 0 0;
 }
