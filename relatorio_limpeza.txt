@@ -1,0 +1,23 @@
+RELATORIO DE LIMPEZA - CONTROLE DE PRAZOS
+Gerado em: 2026-04-12T06:41:45
+Fonte: CONTROLE_DE_PRAZOS_ORGANIZADO.xlsx
+Total de registros: 158
+
+Resumo das correcoes:
+- Colunas invertidas corrigidas: 5
+- Valores textuais convertidos em numericos: 3
+- Valores movidos para observacoes: 6
+- Faixas de valor normalizadas pelo maior valor: 1
+- Datas extraidas de campos textuais: 4
+- Datas invalidas corrigidas: 1
+- Status especiais detectados: 6
+- Empresas convertidas em status especial: 2
+- Gestores normalizados: 22
+- Fiscais normalizados: 25
+- Gestores compostos separados: 15
+- Areas de referencia extraidas: 4
+- Registros com campos pendentes: 88
+- Total de campos pendentes sinalizados: 169
+
+Observacao:
+- O campo 'DIAS PARA VENCIMENTO' nao foi copiado. Ele deve ser recalculado dinamicamente no front-end.

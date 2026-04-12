@@ -1,0 +1,235 @@
+@keyframes entrada-strip {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) translateZ(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes entrada-card {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes entrada-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes entrada-secao {
+  from {
+    opacity: 0;
+    transform: translateY(18px) translateZ(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  35% {
+    transform: scale(1.08);
+    opacity: 0.82;
+  }
+
+  60% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+}
+
+@keyframes chevron-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px) translateZ(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+@keyframes field-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--cor-primaria-rgb), 0);
+    border-color: rgba(var(--cor-primaria-rgb), 0.22);
+  }
+
+  35% {
+    box-shadow: 0 0 0 4px rgba(var(--cor-primaria-rgb), 0.12);
+    border-color: var(--cor-primaria);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--cor-primaria-rgb), 0);
+  }
+}
+
+@keyframes kpi-flash-up {
+  0% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+  }
+
+  45% {
+    box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.16);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+  }
+}
+
+@keyframes kpi-flash-down {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+
+  45% {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.16);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) translateZ(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+body.animando .context-strip {
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(-14px) translateZ(0);
+  animation: entrada-strip 420ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
+}
+
+body.animando .kpi-card {
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(20px) translateZ(0);
+  animation: entrada-card 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+body.animando .kpi-card:nth-child(1) { animation-delay: 200ms; }
+body.animando .kpi-card:nth-child(2) { animation-delay: 280ms; }
+body.animando .kpi-card:nth-child(3) { animation-delay: 360ms; }
+body.animando .kpi-card:nth-child(4) { animation-delay: 440ms; }
+body.animando .kpi-card:nth-child(5) { animation-delay: 520ms; }
+body.animando .kpi-card:nth-child(6) { animation-delay: 600ms; }
+
+body.animando .filters-shell {
+  will-change: opacity;
+  opacity: 0;
+  animation: entrada-fade 360ms ease-out 700ms forwards;
+}
+
+body.animando .content-stack > .panel-section:first-child {
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(18px) translateZ(0);
+  animation: entrada-secao 420ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards;
+}
+
+.kpi-card.is-flash-up {
+  animation: kpi-flash-up 420ms ease-out;
+}
+
+.kpi-card.is-flash-down {
+  animation: kpi-flash-down 420ms ease-out;
+}
+
+.kpi-card--danger:not(.is-muted) .kpi-card__icon svg {
+  animation: icon-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.fold-indicator__chevron {
+  animation: chevron-bounce 1.6s ease-in-out infinite;
+}
+
+.filter-chip {
+  animation: chip-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--chip-index, 0) * 50ms);
+}
+
+.field.is-updated {
+  animation: field-flash 320ms ease-out;
+}
+
+.app-toast.is-visible {
+  animation: toast-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-icon-button.is-busy .header-icon-button__icon::before {
+  animation: spin 0.72s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.animando .context-strip,
+  body.animando .kpi-card,
+  body.animando .filters-shell,
+  body.animando .content-stack > .panel-section:first-child,
+  .kpi-card.is-flash-up,
+  .kpi-card.is-flash-down,
+  .kpi-card--danger:not(.is-muted) .kpi-card__icon svg,
+  .fold-indicator__chevron,
+  .filter-chip,
+  .field.is-updated,
+  .app-toast.is-visible,
+  .header-icon-button.is-busy .header-icon-button__icon::before {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
