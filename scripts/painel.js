@@ -237,6 +237,9 @@
     encerrado: "Encerrado"
   };
 
+  const SITUACOES_VIGENTES = ["regular", "urgente", "atencao"];
+  const FILTROS_SITUACAO_VALIDOS = ["vigentes", "urgente", "atencao", "regular", "sem_vigencia"];
+
   const QUERY_PARAM_MAP = {
     processo: "processo",
     modalidade: "modalidade",
@@ -281,8 +284,10 @@
     resumoGeral: document.getElementById("resumo-geral"),
     resumoFiltros: document.getElementById("resumo-filtros"),
     resumoAreas: document.getElementById("resumo-areas"),
+    resumoVencidos: document.getElementById("resumo-vencidos"),
     mensagemStatus: document.getElementById("mensagem-status"),
     estadoVazio: document.getElementById("estado-vazio"),
+    estadoVazioVencidos: document.getElementById("estado-vazio-vencidos"),
     gradeAreas: document.getElementById("grade-areas"),
     navCategorias: document.getElementById("nav-categorias"),
     listaVencimentos: document.getElementById("lista-vencimentos"),
@@ -290,6 +295,7 @@
     listaDadosPendentes: document.getElementById("lista-dados-pendentes"),
     listaDistribuicao: document.getElementById("lista-distribuicao"),
     secoesCategorias: document.getElementById("secoes-categorias"),
+    secoesVencidos: document.getElementById("secoes-vencidos"),
     metricas: {
       visiveis: document.getElementById("metrica-visiveis"),
       visiveisMeta: document.getElementById("metrica-visiveis-meta"),
@@ -326,6 +332,7 @@
   const state = {
     contratos: [],
     filtrados: [],
+    filtradosVencidos: [],
     referencia: obterDataReferenciaSegura(""),
     ultimaAtualizacao: "",
     origemArquivo: "",
@@ -337,7 +344,7 @@
       tipo: "",
       ano: "",
       area: "",
-      situacao: "",
+      situacao: "vigentes",
       ordenacao: "risco",
       busca: ""
     }
@@ -407,6 +414,25 @@
   function formatarData(valor) {
     const data = parsearDataIso(valor);
     return data ? formatadorData.format(data) : "Não informado";
+  }
+
+  function contratoEhVigente(contrato) {
+    return SITUACOES_VIGENTES.includes(contrato.situacao.chave);
+  }
+
+  function contratoEhVencido(contrato) {
+    return contrato.situacao.chave === "encerrado";
+  }
+
+  function normalizarSituacaoFiltro(valor) {
+    const situacao = String(valor || "").trim();
+    return FILTROS_SITUACAO_VALIDOS.includes(situacao) ? situacao : "vigentes";
+  }
+
+  function obterFiltrosSemSituacao(filtros) {
+    return Object.assign({}, filtros, {
+      situacao: ""
+    });
   }
 
   function obterDataReferenciaSegura(valor) {
@@ -784,7 +810,7 @@
       tipo: DOM.filtros.tipo.value,
       ano: DOM.filtros.ano.value,
       area: DOM.filtros.area.value,
-      situacao: DOM.filtros.situacao.value,
+      situacao: normalizarSituacaoFiltro(DOM.filtros.situacao.value),
       ordenacao: DOM.filtros.ordenacao.value || "risco",
       busca: DOM.filtros.busca.value.trim()
     };
@@ -812,6 +838,8 @@
     if (!state.filtros.ordenacao) {
       state.filtros.ordenacao = "risco";
     }
+
+    state.filtros.situacao = normalizarSituacaoFiltro(state.filtros.situacao);
   }
 
   function sincronizarFiltrosNaUrl() {
@@ -854,8 +882,14 @@
       return false;
     }
 
-    if (filtros.situacao && contrato.situacao.chave !== filtros.situacao) {
-      return false;
+    if (filtros.situacao) {
+      if (filtros.situacao === "vigentes" && !contratoEhVigente(contrato)) {
+        return false;
+      }
+
+      if (filtros.situacao !== "vigentes" && contrato.situacao.chave !== filtros.situacao) {
+        return false;
+      }
     }
 
     if (filtros.busca) {
@@ -1099,11 +1133,15 @@
 
   function atualizarMetricas() {
     const metricas = calcularMetricas(state.filtrados);
+    const totalVencidos = state.filtradosVencidos.length;
+    const recortePrincipal = state.filtros.situacao === "vigentes"
+      ? "vigentes"
+      : "na situação selecionada";
 
     DOM.metricas.visiveis.textContent = String(metricas.total);
     DOM.metricas.visiveisMeta.textContent = metricas.total === 1
-      ? "1 contrato no recorte atual"
-      : metricas.total + " contratos no recorte atual";
+      ? "1 contrato " + recortePrincipal + " no recorte atual"
+      : metricas.total + " contratos " + recortePrincipal + " no recorte atual";
     DOM.metricas.valor.textContent = formatarMoeda(metricas.valor);
     DOM.metricas.urgente.textContent = String(metricas.urgente);
     DOM.metricas.urgenteMeta.textContent = metricas.urgente === 1
@@ -1123,15 +1161,16 @@
       : metricas.pendenciasCadastro + " cadastros com campos relevantes ausentes";
 
     DOM.resumoGeral.textContent =
-      metricas.ativos + " ativos, " +
+      metricas.total + " no painel principal, " +
       metricas.pendenciasCadastro + " com pendência cadastral, " +
       metricas.semVigencia + " sem vigência e " +
-      metricas.encerrado + " encerrados no recorte atual.";
+      totalVencidos + " vencidos destacados ao final.";
 
     DOM.resumoFiltros.textContent =
-      "Recorte com " +
+      "Recorte principal com " +
       metricas.total +
       (metricas.total === 1 ? " contrato visível" : " contratos visíveis") +
+      (state.filtros.situacao === "vigentes" ? ", limitado aos vigentes" : "") +
       ", ordenado por " + rotuloOrdenacao(state.filtros.ordenacao).toLowerCase() + ".";
   }
 
@@ -1451,7 +1490,16 @@
     return badge;
   }
 
-  function criarTabelaArea(area, contratos, totalVisivel) {
+  function criarTabelaArea(area, contratos, totalVisivel, opcoes) {
+    const config = Object.assign({
+      modo: "vigentes",
+      idPrefixo: "area",
+      textoBotao: "Exportar secretaria",
+      nota: "Clique em uma linha para ver detalhes completos, observações e gestor/fiscal vinculado.",
+      exportar: function () {
+        exportarArea(area);
+      }
+    }, opcoes || {});
     const colunas = [
       "Contrato",
       "Objeto",
@@ -1483,13 +1531,16 @@
     const pendentes = contratos.filter(function (contrato) {
       return contrato.pendenteCadastro;
     }).length;
+    const vencidos = contratos.filter(function (contrato) {
+      return contratoEhVencido(contrato);
+    }).length;
     const categoriasInternas = new Set(contratos.map(function (contrato) {
       return contrato.categoria;
     })).size;
     const percentual = totalVisivel ? Math.round((contratos.length / totalVisivel) * 100) : 0;
 
     secao.className = "category-section";
-    secao.id = "area-" + slugify(area);
+    secao.id = config.idPrefixo + "-" + slugify(area);
     cabecalho.className = "category-section__head";
     titulo.className = "category-section__title";
     meta.className = "category-section__meta";
@@ -1503,13 +1554,23 @@
     meta.textContent = contratos.length + (contratos.length === 1 ? " contrato" : " contratos") +
       " nesta secretaria • " + percentual + "% do recorte";
 
-    [
-      contratos.length + " visíveis",
-      formatarMoeda(totalValor),
-      pendentes + (pendentes === 1 ? " com pendência cadastral" : " com pendências cadastrais"),
-      categoriasInternas + (categoriasInternas === 1 ? " categoria interna" : " categorias internas"),
-      urgentes + " em risco imediato"
-    ].forEach(function (texto) {
+    const fatosSecao = config.modo === "encerrados"
+      ? [
+          vencidos + (vencidos === 1 ? " vencido" : " vencidos"),
+          formatarMoeda(totalValor),
+          pendentes + (pendentes === 1 ? " com pendência cadastral" : " com pendências cadastrais"),
+          categoriasInternas + (categoriasInternas === 1 ? " categoria interna" : " categorias internas"),
+          "vigência já encerrada"
+        ]
+      : [
+          contratos.length + " visíveis",
+          formatarMoeda(totalValor),
+          pendentes + (pendentes === 1 ? " com pendência cadastral" : " com pendências cadastrais"),
+          categoriasInternas + (categoriasInternas === 1 ? " categoria interna" : " categorias internas"),
+          urgentes + " em risco imediato"
+        ];
+
+    fatosSecao.forEach(function (texto) {
       const pill = document.createElement("span");
       pill.className = "category-section__fact";
       if (String(texto || "").trim().startsWith("R$")) {
@@ -1521,9 +1582,9 @@
 
     botaoExportar.type = "button";
     botaoExportar.className = "button button--section";
-    botaoExportar.textContent = "Exportar secretaria";
+    botaoExportar.textContent = config.textoBotao;
     botaoExportar.addEventListener("click", function () {
-      exportarArea(area);
+      config.exportar(area);
     });
 
     blocoTitulo.appendChild(titulo);
@@ -1636,7 +1697,7 @@
     });
 
     wrapper.appendChild(tabela);
-    nota.textContent = "Clique em uma linha para ver detalhes completos, observações e gestor/fiscal vinculado.";
+    nota.textContent = config.nota;
     secao.appendChild(wrapper);
     secao.appendChild(nota);
 
@@ -1741,6 +1802,34 @@
     });
 
     observarSecoes();
+  }
+
+  function renderizarSecoesVencidos() {
+    const grupos = agruparPorArea(ordenarContratos(state.filtradosVencidos));
+    const areasComDados = Array.from(grupos.entries()).filter(function (entrada) {
+      return entrada[1].length > 0;
+    });
+
+    DOM.secoesVencidos.replaceChildren();
+    DOM.estadoVazioVencidos.hidden = areasComDados.length > 0;
+    DOM.resumoVencidos.textContent = state.filtradosVencidos.length
+      ? state.filtradosVencidos.length + (state.filtradosVencidos.length === 1 ? " contrato vencido aparece" : " contratos vencidos aparecem") +
+        " abaixo, separados por secretaria e respeitando os filtros institucionais atuais."
+      : "Os contratos vencidos aparecem aqui quando houver correspondência com os filtros atuais.";
+
+    if (!areasComDados.length) {
+      return;
+    }
+
+    areasComDados.forEach(function (entrada) {
+      DOM.secoesVencidos.appendChild(criarTabelaArea(entrada[0], entrada[1], state.filtradosVencidos.length, {
+        modo: "encerrados",
+        idPrefixo: "vencidos",
+        textoBotao: "Exportar vencidos",
+        nota: "Esta seção reúne contratos com vigência encerrada. Clique em uma linha para consultar os detalhes completos do registro.",
+        exportar: exportarAreaVencida
+      }));
+    });
   }
 
   function adicionarItemDrawer(rotulo, valor, semQuebra) {
@@ -1895,37 +1984,59 @@
     }, 1000);
   }
 
-  function exportarRecorteAtual() {
-    if (!state.filtrados.length) {
-      mostrarMensagem("Não há contratos visíveis para exportar no recorte atual.", "info");
-      return;
-    }
-
-    const linhas = [obterCabecalhosCsv()].concat(ordenarContratos(state.filtrados).map(obterLinhaCsv));
-    baixarCsv("painel-contratos-recorte.csv", linhas);
-    mostrarMensagem("CSV do recorte atual gerado com sucesso.", "info");
-  }
-
-  function exportarArea(area) {
-    const contratos = ordenarContratos(state.filtrados.filter(function (contrato) {
-      return contrato.area === area;
-    }));
-
+  function exportarLista(nomeArquivo, contratos, mensagemSucesso, mensagemVazio) {
     if (!contratos.length) {
-      mostrarMensagem("Não há contratos visíveis nesta secretaria para exportar.", "info");
+      mostrarMensagem(mensagemVazio, "info");
       return;
     }
 
     const linhas = [obterCabecalhosCsv()].concat(contratos.map(obterLinhaCsv));
-    baixarCsv("contratos-" + slugify(area) + ".csv", linhas);
-    mostrarMensagem("CSV da secretaria gerado com sucesso.", "info");
+    baixarCsv(nomeArquivo, linhas);
+    mostrarMensagem(mensagemSucesso, "info");
+  }
+
+  function exportarRecorteAtual() {
+    exportarLista(
+      "painel-contratos-recorte.csv",
+      ordenarContratos(state.filtrados),
+      "CSV do recorte atual gerado com sucesso.",
+      "Não há contratos visíveis para exportar no recorte atual."
+    );
+  }
+
+  function exportarArea(area) {
+    exportarLista(
+      "contratos-" + slugify(area) + ".csv",
+      ordenarContratos(state.filtrados.filter(function (contrato) {
+        return contrato.area === area;
+      })),
+      "CSV da secretaria gerado com sucesso.",
+      "Não há contratos visíveis nesta secretaria para exportar."
+    );
+  }
+
+  function exportarAreaVencida(area) {
+    exportarLista(
+      "contratos-vencidos-" + slugify(area) + ".csv",
+      ordenarContratos(state.filtradosVencidos.filter(function (contrato) {
+        return contrato.area === area;
+      })),
+      "CSV dos contratos vencidos gerado com sucesso.",
+      "Não há contratos vencidos visíveis nesta secretaria para exportar."
+    );
   }
 
   function atualizarPainel() {
-    state.filtros = obterFiltrosDoDom();
+    const filtrosAtuais = obterFiltrosDoDom();
+    const filtrosSemSituacao = obterFiltrosSemSituacao(filtrosAtuais);
+
+    state.filtros = filtrosAtuais;
     sincronizarFiltrosNaUrl();
     state.filtrados = state.contratos.filter(function (contrato) {
       return contratoAtendeFiltros(contrato, state.filtros);
+    });
+    state.filtradosVencidos = state.contratos.filter(function (contrato) {
+      return contratoEhVencido(contrato) && contratoAtendeFiltros(contrato, filtrosSemSituacao);
     });
 
     atualizarMetricas();
@@ -1935,6 +2046,7 @@
     preencherListaDadosPendentes();
     preencherDistribuicao();
     renderizarSecoes();
+    renderizarSecoesVencidos();
     mostrarMensagem("", "info");
   }
 
@@ -1945,7 +2057,7 @@
       tipo: "",
       ano: "",
       area: "",
-      situacao: "",
+      situacao: "vigentes",
       ordenacao: "risco",
       busca: ""
     };

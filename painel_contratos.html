@@ -204,12 +204,11 @@
             <label class="field">
               <span>Situação</span>
               <select id="filtro-situacao" name="situacao">
-                <option value="">Todas as situações</option>
+                <option value="vigentes">Somente vigentes</option>
                 <option value="urgente">Vence em até 30 dias</option>
                 <option value="atencao">Vence entre 31 e 90 dias</option>
                 <option value="regular">Vigente regular</option>
                 <option value="sem_vigencia">Sem vigência informada</option>
-                <option value="encerrado">Encerrado</option>
               </select>
             </label>
 
@@ -316,10 +315,10 @@
         <div class="section-heading">
           <div>
             <p class="section-heading__eyebrow">Listagem</p>
-            <h2 id="titulo-resultados">Contratos organizados por secretaria</h2>
+            <h2 id="titulo-resultados">Contratos vigentes organizados por secretaria</h2>
           </div>
           <p class="section-heading__copy">
-            As tabelas abaixo seguem o recorte global e agora priorizam a leitura institucional por secretaria, mantendo a categoria licitatória visível em cada contrato.
+            As tabelas abaixo exibem o recorte vigente do painel, priorizando a leitura institucional por secretaria e mantendo a categoria licitatória visível em cada contrato.
           </p>
         </div>
 
@@ -327,10 +326,29 @@
 
         <div id="estado-vazio" class="empty-state" hidden>
           <h3>Nenhum contrato encontrado</h3>
-          <p>Teste outro termo de busca ou limpe os filtros para voltar ao painel completo.</p>
+          <p>Teste outro termo de busca ou limpe os filtros para voltar ao recorte vigente padrão.</p>
         </div>
 
         <div id="secoes-categorias" class="category-sections"></div>
+      </section>
+
+      <section class="results results--expired reveal reveal--delay-4" aria-labelledby="titulo-vencidos">
+        <div class="section-heading">
+          <div>
+            <p class="section-heading__eyebrow">Histórico</p>
+            <h2 id="titulo-vencidos">Contratos vencidos</h2>
+          </div>
+          <p class="section-heading__copy" id="resumo-vencidos">
+            Os contratos com vigência encerrada aparecem ao final, separados por secretaria e respeitando os demais filtros do painel.
+          </p>
+        </div>
+
+        <div id="estado-vazio-vencidos" class="empty-state" hidden>
+          <h3>Nenhum contrato vencido encontrado</h3>
+          <p>Os filtros atuais não retornaram contratos com vigência encerrada.</p>
+        </div>
+
+        <div id="secoes-vencidos" class="category-sections"></div>
       </section>
     </div>
   </main>
