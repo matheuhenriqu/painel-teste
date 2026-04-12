@@ -40,6 +40,10 @@ def normalize_text(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
+def normalize_upper_text(value: object) -> str:
+    return normalize_text(value).upper()
+
+
 def normalize_lookup(value: object) -> str:
     text = normalize_text(value)
     normalized = unicodedata.normalize("NFD", text)
@@ -313,8 +317,8 @@ def infer_type(contract_number: str) -> str:
 
 def join_manager_and_inspector(manager: str, inspector: str) -> str:
     parts = []
-    manager_value = normalize_text(manager)
-    inspector_value = normalize_text(inspector)
+    manager_value = normalize_upper_text(manager)
+    inspector_value = normalize_upper_text(inspector)
     if manager_value:
         if normalize_lookup(manager_value).startswith("GESTOR:"):
             parts.append(manager_value)
