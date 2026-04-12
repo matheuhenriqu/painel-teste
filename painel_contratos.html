@@ -62,7 +62,7 @@
 
         <ul class="hero__highlights" aria-label="Principais recursos do painel">
           <li>Filtros combinados com URL compartilhável</li>
-          <li>Separação por áreas temáticas da administração</li>
+          <li>Separação por secretarias oficiais do município</li>
           <li>Alertas de vigência e pendências cadastrais</li>
         </ul>
 
@@ -93,9 +93,9 @@
         </article>
 
         <article class="fact-card">
-          <span class="fact-card__label">Áreas mapeadas</span>
+          <span class="fact-card__label">Secretarias mapeadas</span>
           <strong class="fact-card__value" id="fato-categorias">0</strong>
-          <span class="fact-card__meta" id="fato-categorias-meta">Frentes temáticas com contratos cadastrados</span>
+          <span class="fact-card__meta" id="fato-categorias-meta">Secretarias e órgãos centrais com contratos cadastrados</span>
         </article>
       </aside>
     </div>
@@ -195,9 +195,9 @@
             </label>
 
             <label class="field">
-              <span>Área temática</span>
+              <span>Secretaria</span>
               <select id="filtro-area" name="area">
-                <option value="">Todas as áreas</option>
+                <option value="">Todas as secretarias</option>
               </select>
             </label>
 
@@ -297,18 +297,18 @@
       <section class="area-board reveal reveal--delay-4" aria-labelledby="titulo-areas">
         <div class="section-heading">
           <div>
-            <p class="section-heading__eyebrow">Separação Temática</p>
-            <h2 id="titulo-areas">Contratos por área da administração</h2>
+            <p class="section-heading__eyebrow">Separação Institucional</p>
+            <h2 id="titulo-areas">Contratos por secretaria e órgão central</h2>
           </div>
           <p class="section-heading__copy" id="resumo-areas">
-            Cada contrato é classificado pela finalidade predominante para facilitar a leitura por secretaria, tema ou frente de atuação.
+            Cada contrato é classificado pela secretaria predominante, usando a estrutura oficial do portal municipal e os órgãos centrais da administração.
           </p>
         </div>
 
         <div id="grade-areas" class="area-grid"></div>
       </section>
 
-      <nav class="category-nav reveal reveal--delay-4" aria-label="Navegação por áreas temáticas">
+      <nav class="category-nav reveal reveal--delay-4" aria-label="Navegação por secretarias">
         <div class="category-nav__scroll" id="nav-categorias"></div>
       </nav>
 
@@ -316,10 +316,10 @@
         <div class="section-heading">
           <div>
             <p class="section-heading__eyebrow">Listagem</p>
-            <h2 id="titulo-resultados">Contratos organizados por área temática</h2>
+            <h2 id="titulo-resultados">Contratos organizados por secretaria</h2>
           </div>
           <p class="section-heading__copy">
-            As tabelas abaixo seguem o recorte global, mas agora priorizam a leitura por área e mantêm a categoria licitatória visível em cada contrato.
+            As tabelas abaixo seguem o recorte global e agora priorizam a leitura institucional por secretaria, mantendo a categoria licitatória visível em cada contrato.
           </p>
         </div>
 

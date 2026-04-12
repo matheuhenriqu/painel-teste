@@ -26,65 +26,98 @@
 
   const AREAS_VALIDAS = [
     "SAUDE",
-    "EDUCACAO",
+    "ASSISTENCIA_DESENV_SOCIAL",
+    "CULTURA",
+    "DESENV_ECONOMICO_SUSTENTAVEL",
+    "GESTAO_PLANEJAMENTO",
     "INFRAESTRUTURA_OBRAS",
-    "EVENTOS",
-    "LOCACAO_IMOVEIS",
-    "LOCACAO_VEICULOS",
-    "ADMINISTRATIVO_OUTROS"
+    "JUSTICA_CIDADANIA",
+    "EDUCACAO",
+    "TRANSITO_MOBILIDADE",
+    "TURISMO_ESPORTE",
+    "FAZENDA",
+    "GOVERNO_GABINETE_COMUNICACAO"
   ];
 
   const AREAS_ROTULOS = {
-    SAUDE: "Saúde",
-    EDUCACAO: "Educação",
-    INFRAESTRUTURA_OBRAS: "Infraestrutura e obras",
-    EVENTOS: "Eventos",
-    LOCACAO_IMOVEIS: "Locação de imóveis",
-    LOCACAO_VEICULOS: "Locação de veículos",
-    ADMINISTRATIVO_OUTROS: "Administrativo e outras áreas"
+    SAUDE: "Secretaria da Saúde",
+    ASSISTENCIA_DESENV_SOCIAL: "Secretaria de Assistência e Desenvolvimento Social",
+    CULTURA: "Secretaria de Cultura",
+    DESENV_ECONOMICO_SUSTENTAVEL: "Secretaria de Desenvolvimento Econômico Sustentável",
+    GESTAO_PLANEJAMENTO: "Secretaria de Gestão e Planejamento",
+    INFRAESTRUTURA_OBRAS: "Secretaria de Infraestrutura Urbana e Obras",
+    JUSTICA_CIDADANIA: "Secretaria de Justiça e Cidadania",
+    EDUCACAO: "Secretaria de Educação",
+    TRANSITO_MOBILIDADE: "Secretaria de Trânsito e Mobilidade Urbana",
+    TURISMO_ESPORTE: "Secretaria de Turismo e Esporte",
+    FAZENDA: "Secretaria Municipal da Fazenda",
+    GOVERNO_GABINETE_COMUNICACAO: "Gabinete, Governo e Comunicação"
   };
 
   const AREAS_DESCRICOES = {
-    SAUDE: "Atendimento, exames, unidades e suporte clínico.",
-    EDUCACAO: "Escolas, merenda, formação e apoio escolar.",
-    INFRAESTRUTURA_OBRAS: "Obras, pavimentação, manutenção urbana e estruturas permanentes.",
-    EVENTOS: "Turismo, cultura, esporte e operação de eventos.",
-    LOCACAO_IMOVEIS: "Imóveis, built suit e espaços locados.",
-    LOCACAO_VEICULOS: "Frota, seguros, pneus, combustível e transporte.",
-    ADMINISTRATIVO_OUTROS: "Administração, assistência e serviços de apoio."
+    SAUDE: "Unidades, exames, atendimento clínico e vigilância sanitária.",
+    ASSISTENCIA_DESENV_SOCIAL: "Proteção social, acolhimento, CRAS, CREAS e apoio socioassistencial.",
+    CULTURA: "Ações culturais, banda municipal e equipamentos de formação cidadã.",
+    DESENV_ECONOMICO_SUSTENTAVEL: "Sustentabilidade, transbordo, apoio rural e políticas ambientais.",
+    GESTAO_PLANEJAMENTO: "Tecnologia, suprimentos, estrutura administrativa e apoio corporativo.",
+    INFRAESTRUTURA_OBRAS: "Pavimentação, drenagem, manutenção urbana e obras estruturantes.",
+    JUSTICA_CIDADANIA: "Controle de acesso, cidadania, CEJUSC e apoio institucional jurídico.",
+    EDUCACAO: "Rede escolar, merenda, transporte escolar e unidades de ensino.",
+    TRANSITO_MOBILIDADE: "Frota, combustíveis, pneus, seguros e serviços de transporte.",
+    TURISMO_ESPORTE: "Turismo, eventos, feiras, trilhas e atividades esportivas.",
+    FAZENDA: "Arrecadação, carnês, IPTU e relacionamento financeiro institucional.",
+    GOVERNO_GABINETE_COMUNICACAO: "Paço municipal, comunicação institucional e órgãos centrais."
   };
 
   const AREA_POR_OBJETO_EXATO = {
-    "SOFTWARE DE GESTAO PUBLICA": "ADMINISTRATIVO_OUTROS",
+    "SOFTWARE DE GESTAO PUBLICA": "GESTAO_PLANEJAMENTO",
     "AGRICULTURA FAMILIAR": "EDUCACAO",
-    OFICINEIROS: "EDUCACAO",
+    OFICINEIROS: "ASSISTENCIA_DESENV_SOCIAL",
     "LIXO HOSPITALAR": "SAUDE",
-    "PROFISSIONAIS ESPORTIVOS": "EVENTOS",
-    "SISTEMA INFORMATIZADO - 1DOC": "ADMINISTRATIVO_OUTROS",
+    "PROFISSIONAIS ESPORTIVOS": "TURISMO_ESPORTE",
+    "SISTEMA INFORMATIZADO - 1DOC": "GESTAO_PLANEJAMENTO",
     "TRANSPORTE DE PACIENTES": "SAUDE",
-    INTERNET: "ADMINISTRATIVO_OUTROS",
-    "LOCACAO DE EQUIP DE INFORMATICA": "ADMINISTRATIVO_OUTROS",
+    INTERNET: "GESTAO_PLANEJAMENTO",
+    "LOCACAO DE EQUIP DE INFORMATICA": "GESTAO_PLANEJAMENTO",
     "MANUTENCAO EQUIP. DA SAUDE": "SAUDE",
     "MANUTENCAO DE EQUIP. ODONTOLOGICOS": "SAUDE",
     "TELEATENDIMENTO EM PEDIATRIA": "SAUDE",
     "MANUTENCAO EQUIP. DE FISIOTERAPIA": "SAUDE",
-    TRILHAS: "EVENTOS",
-    "TRANSPORTE FLUVIAL": "LOCACAO_VEICULOS",
-    "SEGURO DE VEICULOS": "LOCACAO_VEICULOS",
-    "ARBITRAGEM FUTEBOL": "EVENTOS",
+    TRILHAS: "TURISMO_ESPORTE",
+    "TRANSPORTE FLUVIAL": "TRANSITO_MOBILIDADE",
+    "SEGURO DE VEICULOS": "TRANSITO_MOBILIDADE",
+    "ARBITRAGEM FUTEBOL": "TURISMO_ESPORTE",
     "MATERIAL DE ENFERMAGEM": "SAUDE",
-    "CARRO DE SOM": "EVENTOS",
+    "CARRO DE SOM": "TURISMO_ESPORTE",
     "AQUISICAO DE MEDICAMENTOS": "SAUDE",
-    "LOCACAO MAO DE OBRA": "ADMINISTRATIVO_OUTROS",
-    "CONTROLADOR DE ACESSO": "ADMINISTRATIVO_OUTROS",
-    "GAS DE COZINHA": "ADMINISTRATIVO_OUTROS",
-    COMBUSTIVEL: "LOCACAO_VEICULOS",
+    "LOCACAO MAO DE OBRA": "GESTAO_PLANEJAMENTO",
+    "CONTROLADOR DE ACESSO": "JUSTICA_CIDADANIA",
+    "GAS DE COZINHA": "GESTAO_PLANEJAMENTO",
+    COMBUSTIVEL: "TRANSITO_MOBILIDADE",
+    "PACO MUNICIPAL": "GOVERNO_GABINETE_COMUNICACAO",
+    "PACO MUNICIPAL-PREDIO TOLEDO": "GOVERNO_GABINETE_COMUNICACAO",
+    "ALMOXARIFADO/ARQUIVO": "GESTAO_PLANEJAMENTO",
+    CRAS: "ASSISTENCIA_DESENV_SOCIAL",
+    "SERVICO FUNERARIO": "ASSISTENCIA_DESENV_SOCIAL",
+    SAICA: "ASSISTENCIA_DESENV_SOCIAL",
+    "SAICA*": "ASSISTENCIA_DESENV_SOCIAL",
+    "CONSELHO TUTELAR": "ASSISTENCIA_DESENV_SOCIAL",
+    "CREDENCIAMENTO BUILT SUIT VIRGINIA CRAS": "ASSISTENCIA_DESENV_SOCIAL",
+    "CRED.BUILT SUIT CREAS": "ASSISTENCIA_DESENV_SOCIAL",
+    "REFORMA CASA DA CRIANCA": "ASSISTENCIA_DESENV_SOCIAL",
+    "AQUISICAO DE UNIFORME BANDA": "CULTURA",
+    "BANDA MUNICIPAL": "CULTURA",
+    "MOB. CASA DA JUVENTUDE": "CULTURA",
+    "CLINICA PET": "DESENV_ECONOMICO_SUSTENTAVEL",
+    "EQUIPAMENTOS SUSTENTAVEL": "DESENV_ECONOMICO_SUSTENTAVEL",
+    TRANSBORDO: "DESENV_ECONOMICO_SUSTENTAVEL",
+    ITESP: "DESENV_ECONOMICO_SUSTENTAVEL",
     "ELETRICA UNIDADE MISTA": "INFRAESTRUTURA_OBRAS",
     "DADE 2018 LOTE 01": "INFRAESTRUTURA_OBRAS",
     "DADE 2018 LOTE 02": "INFRAESTRUTURA_OBRAS",
     "REFORMA DO CAPS": "SAUDE",
     "UBS NOVA IGUAPE": "SAUDE",
-    "ELETRICA FESTA DE AGOSTO": "EVENTOS",
+    "ELETRICA FESTA DE AGOSTO": "TURISMO_ESPORTE",
     "FORRO IGREJA SAO BENEDITO": "INFRAESTRUTURA_OBRAS",
     "CRECHE JARDIM PRIMAVERA": "EDUCACAO",
     "PAVIMENTACAO JAIRE": "INFRAESTRUTURA_OBRAS",
@@ -104,67 +137,89 @@
     "PEM - BANCO DO BRASIL LOTE 4": "INFRAESTRUTURA_OBRAS",
     "REVITALIZACAO DA ORLA DO MAR PEQUENO - FASE III": "INFRAESTRUTURA_OBRAS",
     "REFORMA ESCOLA AMANCIA": "EDUCACAO",
-    "REFORMA DO GINASIO": "INFRAESTRUTURA_OBRAS",
-    "CAMPO DE FUTEBOL NA BARRA": "INFRAESTRUTURA_OBRAS",
+    "REFORMA DO GINASIO": "TURISMO_ESPORTE",
+    "CAMPO DE FUTEBOL NA BARRA": "TURISMO_ESPORTE",
     "CENTRO MULTIUSO DO CANTO DO MORRO": "INFRAESTRUTURA_OBRAS",
     "REFORMA ESCOLA ZELY": "EDUCACAO",
     "ESF AEROPORTO": "SAUDE",
-    "REFORMA CASA DA CRIANCA": "EDUCACAO",
     "DADE 2023": "INFRAESTRUTURA_OBRAS",
     "REFORMA ESF ITIMIRIM": "SAUDE",
+    "ESF-ITIMIRIM I": "SAUDE",
+    "SETOR DE FISIOTERAPIA": "SAUDE",
+    "RESIDENCIA TERAPEUTICA": "SAUDE",
     "REFORMA BENEDITO ROSA FASE II": "EDUCACAO",
     "PAVIMENTACAO JUREIA": "INFRAESTRUTURA_OBRAS",
-    "CRED. INSTITUICAO FINANCEIRA": "ADMINISTRATIVO_OUTROS",
+    "CRED. INSTITUICAO FINANCEIRA": "FAZENDA",
     "CRED. PODA E ROCADA": "INFRAESTRUTURA_OBRAS",
     "CREDENCIAMENTO ESPECIALIDADES MEDICAS (NOVO)": "SAUDE",
-    "CREDENCIAMENTO BUILT SUIT VIRGINIA CRAS": "LOCACAO_IMOVEIS",
-    "CHAMADA PUBLICA O.S": "ADMINISTRATIVO_OUTROS",
-    "CREDENCIAMENTO LIMPEZA VERAO": "INFRAESTRUTURA_OBRAS",
-    "CRED.BUILT SUIT CREAS": "LOCACAO_IMOVEIS",
+    "CHAMADA PUBLICA O.S": "SAUDE",
+    "CREDENCIAMENTO LIMPEZA VERAO": "TURISMO_ESPORTE",
     ULTRASON: "SAUDE",
     "EXAMES LABORATORIAIS": "SAUDE",
-    "SERVICO FUNERARIO": "ADMINISTRATIVO_OUTROS",
-    ESTRUTURAS: "EVENTOS",
-    "CAMARIM, CONTEINER ESCRITORIO": "EVENTOS",
-    PNEUS: "LOCACAO_VEICULOS",
+    ESTRUTURAS: "TURISMO_ESPORTE",
+    "CAMARIM, CONTEINER ESCRITORIO": "TURISMO_ESPORTE",
+    PNEUS: "TRANSITO_MOBILIDADE",
     SINALIZACAO: "INFRAESTRUTURA_OBRAS",
-    "MATERIAL GRAFICO": "ADMINISTRATIVO_OUTROS",
-    GELO: "EVENTOS",
-    "OLEO E LUBRIFICANTE": "LOCACAO_VEICULOS",
+    "MATERIAL GRAFICO": "GOVERNO_GABINETE_COMUNICACAO",
+    GELO: "TURISMO_ESPORTE",
+    "OLEO E LUBRIFICANTE": "TRANSITO_MOBILIDADE",
     "AQUISICAO DE SUPLEMENTOS": "SAUDE",
     OXIGENIO: "SAUDE",
-    "AQUISICAO DE UNIFORME BANDA": "EVENTOS",
-    BUFFET: "EVENTOS",
-    "CADEIRAS GIRATORIAS": "ADMINISTRATIVO_OUTROS",
-    "VAN ESPORTE": "LOCACAO_VEICULOS",
+    BUFFET: "TURISMO_ESPORTE",
+    "CADEIRAS GIRATORIAS": "GESTAO_PLANEJAMENTO",
+    "VAN ESPORTE": "TURISMO_ESPORTE",
     "EMPRESA DE ENFERMAGEM": "SAUDE",
-    "CLINICA PET": "SAUDE",
-    "JORNAL GAZETA": "EVENTOS",
-    "MOB. CASA DA JUVENTUDE": "ADMINISTRATIVO_OUTROS",
+    "JORNAL GAZETA": "GOVERNO_GABINETE_COMUNICACAO",
     "MATERIAIS DE ACABAMENTO": "INFRAESTRUTURA_OBRAS",
-    "CONFECCAO DE CARNES E IPTU": "ADMINISTRATIVO_OUTROS",
-    "AQUISICAO DE AGUA MINERAL": "ADMINISTRATIVO_OUTROS",
+    "CONFECCAO DE CARNES E IPTU": "FAZENDA",
+    "AQUISICAO DE AGUA MINERAL": "GESTAO_PLANEJAMENTO",
     "AGREGADOS MINERAIS": "INFRAESTRUTURA_OBRAS",
     "TRASNSPORTE ESCOLAR ONIBUS": "EDUCACAO",
     "TRANSFORME ESCOLAR KOMBI": "EDUCACAO",
-    TONNER: "ADMINISTRATIVO_OUTROS",
+    "TRANSPORTE COLETIVO ZONA RURAL": "TRANSITO_MOBILIDADE",
+    TONNER: "GESTAO_PLANEJAMENTO",
     "AR CONDICIONADO": "INFRAESTRUTURA_OBRAS",
     "AR CONDICIONADO SRP": "INFRAESTRUTURA_OBRAS",
-    TRANSBORDO: "LOCACAO_VEICULOS",
-    "FEIRA DE GASTRONOMIA": "EVENTOS",
-    "BANHEIRO QUIMICO": "EVENTOS",
-    "EQUIPAMENTOS SUSTENTAVEL": "INFRAESTRUTURA_OBRAS",
-    "LEVANTAMENTO PETROLEO": "ADMINISTRATIVO_OUTROS"
+    "FEIRA DE GASTRONOMIA": "TURISMO_ESPORTE",
+    "BANHEIRO QUIMICO": "TURISMO_ESPORTE",
+    "LEVANTAMENTO PETROLEO": "TRANSITO_MOBILIDADE",
+    "CARTORIO ELEITORAL": "JUSTICA_CIDADANIA",
+    "DELEGACIA - ROCIO": "JUSTICA_CIDADANIA",
+    "CEJUSC, FAZ, PUBL E PROTOCOLO": "JUSTICA_CIDADANIA",
+    "UNIDADE ESCOLAR DO BAIRRO ICAPARA": "EDUCACAO",
+    "CENTRO DE FORMACAO EDUCACIONAL": "EDUCACAO",
+    "LOCACAO PREDIO VIGILANCIA SANITARIA": "SAUDE",
+    "DEP. CULT. TURISMO E EVENTOS": "TURISMO_ESPORTE"
   };
 
   const PALAVRAS_CHAVE_AREA = {
-    SAUDE: ["UBS", "CAPS", "ESF", "SAUDE", "ENFERMAG", "MEDIC", "ODONTO", "FISIOTERAP", "PEDIATR", "LABORAT", "OXIGEN"],
-    EDUCACAO: ["ESCOLA", "CRECHE", "ESCOLAR", "FORMACAO EDUCACIONAL", "MERENDA", "BANDA"],
-    INFRAESTRUTURA_OBRAS: ["PAVIMENT", "DRENAGEM", "OBRA", "REFORMA", "REVITALIZ", "INTERTRAV", "HABITACIONAL", "PONTO DE ONIBUS", "ACABAMENTO", "AGREGADOS", "SINALIZACAO", "LIMPEZA PUBLICA"],
-    EVENTOS: ["EVENTO", "FESTA", "FEIRA", "CAMARIM", "BUFFET", "GELO", "BANHEIRO QUIMICO", "CARRO DE SOM", "TRILHAS", "ARBITRAGEM", "ESTRUTURAS"],
-    LOCACAO_IMOVEIS: ["BUILT SUIT"],
-    LOCACAO_VEICULOS: ["PNEU", "COMBUST", "LUBRIFIC", "OLEO", "VEICUL", "TRANSBORDO", "TRANSPORTE FLUVIAL", "TRANSPORTE COLETIVO"]
+    SAUDE: ["UBS", "CAPS", "ESF", "SAUDE", "ENFERMAG", "MEDIC", "ODONTO", "FISIOTERAP", "PEDIATR", "LABORAT", "OXIGEN", "VIGILANCIA SANITARIA", "UNIDADE MISTA"],
+    ASSISTENCIA_DESENV_SOCIAL: ["CRAS", "CREAS", "CONSELHO TUTELAR", "SAICA", "FUNERARIO", "ASSISTENCIA", "SOCIAL", "CASA DA CRIANCA"],
+    CULTURA: ["BANDA", "CULTURA", "JUVENTUDE"],
+    DESENV_ECONOMICO_SUSTENTAVEL: ["PET", "SUSTENT", "TRANSBORDO", "ITESP"],
+    GESTAO_PLANEJAMENTO: ["GESTAO PUBLICA", "1DOC", "INTERNET", "INFORMATICA", "ALMOXARIFADO", "ARQUIVO", "TONNER", "AGUA MINERAL", "CADEIRAS GIRATORIAS", "LOCACAO MAO DE OBRA", "GAS DE COZINHA"],
+    INFRAESTRUTURA_OBRAS: ["PAVIMENT", "DRENAGEM", "OBRA", "REFORMA", "REVITALIZ", "INTERTRAV", "HABITACIONAL", "PONTO DE ONIBUS", "ACABAMENTO", "AGREGADOS", "SINALIZACAO", "LIMPEZA PUBLICA", "PODA", "ROCADA", "AR CONDICIONADO", "FORRO"],
+    JUSTICA_CIDADANIA: ["CEJUSC", "CARTORIO ELEITORAL", "DELEGACIA", "JUSTICA", "CIDADANIA", "CONTROLADOR DE ACESSO"],
+    EDUCACAO: ["ESCOLA", "CRECHE", "ESCOLAR", "FORMACAO EDUCACIONAL", "MERENDA", "AGRICULTURA FAMILIAR"],
+    TRANSITO_MOBILIDADE: ["PNEU", "COMBUST", "LUBRIFIC", "OLEO", "VEICUL", "TRANSPORTE FLUVIAL", "TRANSPORTE COLETIVO", "TRANSITO", "MOBILIDADE"],
+    TURISMO_ESPORTE: ["EVENTO", "FESTA", "FEIRA", "CAMARIM", "BUFFET", "GELO", "BANHEIRO QUIMICO", "CARRO DE SOM", "TRILHAS", "ARBITRAGEM", "ESTRUTURAS", "ESPORTE", "GINASIO", "FUTEBOL"],
+    FAZENDA: ["IPTU", "CARNE", "INSTITUICAO FINANCEIRA", "FAZENDA"],
+    GOVERNO_GABINETE_COMUNICACAO: ["PACO MUNICIPAL", "GOVERNO", "GABINETE", "COMUNICACAO", "JORNAL", "MATERIAL GRAFICO"]
   };
+
+  const GESTORES_REFERENCIA_SECRETARIA = [
+    { secretaria: "FAZENDA", termos: ["ANGELO ROSA VIEIRA", "EDSON LUIZ NOVAIS MACHADO"] },
+    { secretaria: "JUSTICA_CIDADANIA", termos: ["ANTONIO MATHEUS DA VEIGA NETO"] },
+    { secretaria: "TURISMO_ESPORTE", termos: ["ANISIA LOURENCO MENDES", "ANISIA LOURENCO", "FERNANDO EIJI YANAGUIZAWA"] },
+    { secretaria: "CULTURA", termos: ["ODAIL GOMES", "ODA GOMES"] },
+    { secretaria: "DESENV_ECONOMICO_SUSTENTAVEL", termos: ["SELMA XAVIER PONTES"] },
+    { secretaria: "SAUDE", termos: ["ANA LETICIA CARDOSO MORAIS", "FERNANDO RORATO", "VICTOR PEREIRA DE MATOS", "KARIMY DE RAMOS AGUIAR"] },
+    { secretaria: "ASSISTENCIA_DESENV_SOCIAL", termos: ["ISABELLE MARTINS BENETTI", "VIRGINIA LUCIA", "SAMUEL ROBERTO"] },
+    { secretaria: "EDUCACAO", termos: ["FABIANO JOSE DE OLIVEIRA XAVIER", "CINDI MOREIRA CUNHA", "LUCIANO PEREIRA VIANA", "THALES KODI NAMBA"] },
+    { secretaria: "TRANSITO_MOBILIDADE", termos: ["IBANES SOUZA VIEIRA", "VICTOR GOMES DIAS"] },
+    { secretaria: "INFRAESTRUTURA_OBRAS", termos: ["RICARDO OLIVEIRA RAGNI", "RAFAEL DE BARROS LEITE"] },
+    { secretaria: "GOVERNO_GABINETE_COMUNICACAO", termos: ["ADMINISTRACAO", "CELIO PAULO", "ERIKA SILVA OISHI"] }
+  ];
 
   const ORDEM_SITUACAO = {
     urgente: 0,
@@ -452,11 +507,11 @@
   }
 
   function rotuloArea(valor) {
-    return AREAS_ROTULOS[valor] || AREAS_ROTULOS.ADMINISTRATIVO_OUTROS;
+    return AREAS_ROTULOS[valor] || AREAS_ROTULOS.GOVERNO_GABINETE_COMUNICACAO;
   }
 
   function descricaoArea(valor) {
-    return AREAS_DESCRICOES[valor] || AREAS_DESCRICOES.ADMINISTRATIVO_OUTROS;
+    return AREAS_DESCRICOES[valor] || AREAS_DESCRICOES.GOVERNO_GABINETE_COMUNICACAO;
   }
 
   function obterCategoriaNormalizada(categoria) {
@@ -470,24 +525,52 @@
     });
   }
 
+  function inferirSecretariaPorGestor(gestorFiscal) {
+    const gestorNormalizado = normalizarTexto(gestorFiscal);
+
+    if (!gestorNormalizado) {
+      return "";
+    }
+
+    const grupo = GESTORES_REFERENCIA_SECRETARIA.find(function (item) {
+      return item.termos.some(function (termo) {
+        return gestorNormalizado.includes(termo);
+      });
+    });
+
+    return grupo ? grupo.secretaria : "";
+  }
+
   function inferirAreaTematica(item) {
     const objeto = normalizarTexto(item.objeto);
-    const categoria = normalizarTexto(item.categoriaOriginal || item.categoria);
-
-    if (categoria === "LOCACAO") {
-      return "LOCACAO_IMOVEIS";
-    }
+    const secretariaPorGestor = inferirSecretariaPorGestor(item.gestor_fiscal);
 
     if (AREA_POR_OBJETO_EXATO[objeto]) {
       return AREA_POR_OBJETO_EXATO[objeto];
     }
 
-    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.LOCACAO_IMOVEIS)) {
-      return "LOCACAO_IMOVEIS";
-    }
-
     if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.SAUDE)) {
       return "SAUDE";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.ASSISTENCIA_DESENV_SOCIAL)) {
+      return "ASSISTENCIA_DESENV_SOCIAL";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.CULTURA)) {
+      return "CULTURA";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.DESENV_ECONOMICO_SUSTENTAVEL)) {
+      return "DESENV_ECONOMICO_SUSTENTAVEL";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.GESTAO_PLANEJAMENTO)) {
+      return "GESTAO_PLANEJAMENTO";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.JUSTICA_CIDADANIA)) {
+      return "JUSTICA_CIDADANIA";
     }
 
     if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.EDUCACAO)) {
@@ -498,15 +581,27 @@
       return "INFRAESTRUTURA_OBRAS";
     }
 
-    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.EVENTOS)) {
-      return "EVENTOS";
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.TRANSITO_MOBILIDADE)) {
+      return "TRANSITO_MOBILIDADE";
     }
 
-    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.LOCACAO_VEICULOS)) {
-      return "LOCACAO_VEICULOS";
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.TURISMO_ESPORTE)) {
+      return "TURISMO_ESPORTE";
     }
 
-    return "ADMINISTRATIVO_OUTROS";
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.FAZENDA)) {
+      return "FAZENDA";
+    }
+
+    if (contemAlgumaExpressao(objeto, PALAVRAS_CHAVE_AREA.GOVERNO_GABINETE_COMUNICACAO)) {
+      return "GOVERNO_GABINETE_COMUNICACAO";
+    }
+
+    if (secretariaPorGestor) {
+      return secretariaPorGestor;
+    }
+
+    return "GOVERNO_GABINETE_COMUNICACAO";
   }
 
   function comporIndiceBusca(item) {
@@ -641,7 +736,7 @@
     popularSelect(DOM.filtros.modalidade, modalidades, "Todas as modalidades");
     popularSelect(DOM.filtros.tipo, tipos, "Todos os tipos");
     popularSelect(DOM.filtros.ano, anos, "Todos os anos");
-    popularSelect(DOM.filtros.area, areas, "Todas as áreas");
+    popularSelect(DOM.filtros.area, areas, "Todas as secretarias");
   }
 
   function obterCoberturaAnos(contratos) {
@@ -678,8 +773,8 @@
     })).size;
     DOM.fatoCategorias.textContent = String(areasComDados);
     DOM.fatoCategoriasMeta.textContent = areasComDados === 1
-      ? "1 área temática com contratos"
-      : areasComDados + " áreas temáticas com contratos";
+      ? "1 secretaria com contratos"
+      : areasComDados + " secretarias e órgãos centrais com contratos";
   }
 
   function obterFiltrosDoDom() {
@@ -1057,8 +1152,8 @@
 
     DOM.gradeAreas.replaceChildren();
     DOM.resumoAreas.textContent = totalBase
-      ? "Os cards abaixo respeitam os filtros atuais e ajudam a alternar a leitura por área temática."
-      : "Nenhum contrato atende aos filtros atuais; ajuste o recorte para visualizar as áreas mapeadas.";
+      ? "Os cards abaixo respeitam os filtros atuais e ajudam a alternar a leitura por secretaria responsável."
+      : "Nenhum contrato atende aos filtros atuais; ajuste o recorte para visualizar as secretarias mapeadas.";
 
     AREAS_VALIDAS.forEach(function (area) {
       const contratos = ordenarContratos(grupos.get(area) || []);
@@ -1406,7 +1501,7 @@
 
     titulo.textContent = rotuloArea(area);
     meta.textContent = contratos.length + (contratos.length === 1 ? " contrato" : " contratos") +
-      " nesta área • " + percentual + "% do recorte";
+      " nesta secretaria • " + percentual + "% do recorte";
 
     [
       contratos.length + " visíveis",
@@ -1426,7 +1521,7 @@
 
     botaoExportar.type = "button";
     botaoExportar.className = "button button--section";
-    botaoExportar.textContent = "Exportar área";
+    botaoExportar.textContent = "Exportar secretaria";
     botaoExportar.addEventListener("click", function () {
       exportarArea(area);
     });
@@ -1683,7 +1778,7 @@
     DOM.drawerStatusExcel.textContent = contrato.status_excel || "Sem status no Excel";
     DOM.drawerGrid.replaceChildren();
 
-    adicionarItemDrawer("Área temática", rotuloArea(contrato.area));
+    adicionarItemDrawer("Secretaria responsável", rotuloArea(contrato.area));
     adicionarItemDrawer("Categoria licitatória", contrato.categoriaOriginal || rotuloCategoria(contrato.categoria));
     adicionarItemDrawer("Fornecedor", contrato.fornecedor || "Não informado");
     adicionarItemDrawer("Processo", contrato.processo || "Não informado");
@@ -1731,7 +1826,7 @@
 
   function obterCabecalhosCsv() {
     return [
-      "Área temática",
+      "Secretaria responsável",
       "Categoria",
       "Ano",
       "Número",
@@ -1817,13 +1912,13 @@
     }));
 
     if (!contratos.length) {
-      mostrarMensagem("Não há contratos visíveis nesta área para exportar.", "info");
+      mostrarMensagem("Não há contratos visíveis nesta secretaria para exportar.", "info");
       return;
     }
 
     const linhas = [obterCabecalhosCsv()].concat(contratos.map(obterLinhaCsv));
     baixarCsv("contratos-" + slugify(area) + ".csv", linhas);
-    mostrarMensagem("CSV da área gerado com sucesso.", "info");
+    mostrarMensagem("CSV da secretaria gerado com sucesso.", "info");
   }
 
   function atualizarPainel() {
