@@ -60,6 +60,12 @@
           seguindo a linguagem visual do portal oficial do município.
         </p>
 
+        <ul class="hero__highlights" aria-label="Principais recursos do painel">
+          <li>Filtros combinados com URL compartilhável</li>
+          <li>Separação por áreas temáticas da administração</li>
+          <li>Alertas de vigência e pendências cadastrais</li>
+        </ul>
+
         <div class="hero__actions">
           <button class="button button--primary" type="button" id="exportar-recorte">Exportar recorte CSV</button>
           <button class="button button--ghost" type="button" id="limpar-filtros">Limpar filtros</button>
@@ -242,7 +248,7 @@
         </div>
 
         <div class="insights-grid">
-          <article class="insight-card">
+          <article class="insight-card insight-card--priority">
             <div class="insight-card__head">
               <div>
                 <p class="section-heading__eyebrow">Prioridade</p>
@@ -253,7 +259,7 @@
             <ul class="priority-list" id="lista-vencimentos"></ul>
           </article>
 
-          <article class="insight-card">
+          <article class="insight-card insight-card--attention">
             <div class="insight-card__head">
               <div>
                 <p class="section-heading__eyebrow">Pendencias</p>
@@ -264,7 +270,7 @@
             <ul class="priority-list" id="lista-pendencias"></ul>
           </article>
 
-          <article class="insight-card">
+          <article class="insight-card insight-card--pending">
             <div class="insight-card__head">
               <div>
                 <p class="section-heading__eyebrow">Cadastro</p>
@@ -275,7 +281,7 @@
             <ul class="priority-list" id="lista-dados-pendentes"></ul>
           </article>
 
-          <article class="insight-card">
+          <article class="insight-card insight-card--distribution">
             <div class="insight-card__head">
               <div>
                 <p class="section-heading__eyebrow">Distribuicao</p>
