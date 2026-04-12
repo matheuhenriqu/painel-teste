@@ -394,6 +394,9 @@ a {
   line-height: 1;
   letter-spacing: -0.04em;
   color: var(--texto1);
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .fact-card__meta,
@@ -676,6 +679,12 @@ a {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.area-card__fact--value {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .insight-card {
@@ -1176,6 +1185,13 @@ a {
   font-size: 14px;
   line-height: 1.7;
   color: var(--texto1);
+}
+
+.drawer__item--value dd,
+.category-section__fact--value {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .noscript-banner {

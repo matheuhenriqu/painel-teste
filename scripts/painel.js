@@ -1043,6 +1043,9 @@
   function criarChipArea(texto) {
     const chip = document.createElement("span");
     chip.className = "area-card__fact";
+    if (String(texto || "").trim().startsWith("R$")) {
+      chip.classList.add("area-card__fact--value");
+    }
     chip.textContent = texto;
     return chip;
   }
@@ -1414,6 +1417,9 @@
     ].forEach(function (texto) {
       const pill = document.createElement("span");
       pill.className = "category-section__fact";
+      if (String(texto || "").trim().startsWith("R$")) {
+        pill.classList.add("category-section__fact--value");
+      }
       pill.textContent = texto;
       fatos.appendChild(pill);
     });
@@ -1642,7 +1648,7 @@
     observarSecoes();
   }
 
-  function adicionarItemDrawer(rotulo, valor) {
+  function adicionarItemDrawer(rotulo, valor, semQuebra) {
     if (!valor) {
       return;
     }
@@ -1652,6 +1658,9 @@
     const descricao = document.createElement("dd");
 
     bloco.className = "drawer__item";
+    if (semQuebra) {
+      bloco.classList.add("drawer__item--value");
+    }
     titulo.textContent = rotulo;
     descricao.textContent = valor;
     bloco.appendChild(titulo);
@@ -1681,9 +1690,9 @@
     adicionarItemDrawer("Modalidade", contrato.modalidade || "Não informada");
     adicionarItemDrawer("Tipo", contrato.tipo || "Não informado");
     adicionarItemDrawer("Ano", contrato.ano ? String(contrato.ano) : "Não informado");
-    adicionarItemDrawer("Valor exibido", obterTextoValorContrato(contrato));
+    adicionarItemDrawer("Valor exibido", obterTextoValorContrato(contrato), true);
     if (contrato.valorTexto) {
-      adicionarItemDrawer("Valor numérico base", formatarMoeda(contrato.valor));
+      adicionarItemDrawer("Valor numérico base", formatarMoeda(contrato.valor), true);
     }
     adicionarItemDrawer("Início da vigência", formatarData(contrato.inicio_vigencia));
     adicionarItemDrawer("Fim da vigência", formatarData(contrato.fim_vigencia));
