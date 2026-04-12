@@ -1691,9 +1691,6 @@
     adicionarItemDrawer("Tipo", contrato.tipo || "Não informado");
     adicionarItemDrawer("Ano", contrato.ano ? String(contrato.ano) : "Não informado");
     adicionarItemDrawer("Valor exibido", obterTextoValorContrato(contrato), true);
-    if (contrato.valorTexto) {
-      adicionarItemDrawer("Valor numérico base", formatarMoeda(contrato.valor), true);
-    }
     adicionarItemDrawer("Início da vigência", formatarData(contrato.inicio_vigencia));
     adicionarItemDrawer("Fim da vigência", formatarData(contrato.fim_vigencia));
     adicionarItemDrawer("Prazo calculado", formatarResumoDias(contrato.situacao.diasRestantes));
