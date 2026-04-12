@@ -232,6 +232,7 @@
     navCategorias: document.getElementById("nav-categorias"),
     listaVencimentos: document.getElementById("lista-vencimentos"),
     listaPendencias: document.getElementById("lista-pendencias"),
+    listaDadosPendentes: document.getElementById("lista-dados-pendentes"),
     listaDistribuicao: document.getElementById("lista-distribuicao"),
     secoesCategorias: document.getElementById("secoes-categorias"),
     metricas: {
@@ -243,7 +244,9 @@
       atencao: document.getElementById("metrica-atencao"),
       atencaoMeta: document.getElementById("metrica-atencao-meta"),
       semVigencia: document.getElementById("metrica-sem-vigencia"),
-      semVigenciaMeta: document.getElementById("metrica-sem-vigencia-meta")
+      semVigenciaMeta: document.getElementById("metrica-sem-vigencia-meta"),
+      pendencias: document.getElementById("metrica-pendencias"),
+      pendenciasMeta: document.getElementById("metrica-pendencias-meta")
     },
     filtros: {
       processo: document.getElementById("filtro-processo"),
@@ -302,6 +305,10 @@
 
   function compararTexto(a, b) {
     return collator.compare(String(a || ""), String(b || ""));
+  }
+
+  function normalizarParaMaiusculas(valor) {
+    return String(valor || "").trim().toLocaleUpperCase("pt-BR");
   }
 
   function escaparCsv(valor) {
@@ -515,7 +522,9 @@
       item.tipo,
       item.observacoes,
       item.gestor_fiscal,
-      item.status_excel
+      item.status_excel,
+      item.resumoPendenciasCadastro,
+      (item.pendenciasCadastro || []).join(" ")
     ].join(" "));
   }
 
@@ -537,10 +546,13 @@
       fim_vigencia: String(item.fim_vigencia || "").trim(),
       status_excel: String(item.status_excel || "").trim(),
       observacoes: String(item.observacoes || "").trim(),
-      gestor_fiscal: String(item.gestor_fiscal || "").trim()
+      gestor_fiscal: normalizarParaMaiusculas(item.gestor_fiscal)
     };
 
     contratoBase.area = inferirAreaTematica(contratoBase);
+    contratoBase.pendenciasCadastro = listarPendenciasCadastro(contratoBase);
+    contratoBase.pendenteCadastro = contratoBase.pendenciasCadastro.length > 0;
+    contratoBase.resumoPendenciasCadastro = resumirPendenciasCadastro(contratoBase);
 
     const situacao = obterSituacaoContrato(contratoBase, state.referencia);
 
@@ -899,6 +911,68 @@
     return formatarMoeda(contrato.valor);
   }
 
+  function listarPendenciasCadastro(contrato) {
+    const pendencias = [];
+    const exigeDadosContratuais = contrato.status_excel === "VIGENTE" ||
+      contrato.status_excel === "ENCERRADO" ||
+      Boolean(
+        contrato.numero ||
+        contrato.fornecedor ||
+        contrato.inicio_vigencia ||
+        contrato.fim_vigencia ||
+        contrato.valorTexto ||
+        Number(contrato.valor)
+      );
+
+    if (!contrato.objeto) {
+      pendencias.push("Objeto");
+    }
+
+    if (!contrato.processo) {
+      pendencias.push("Processo");
+    }
+
+    if (!contrato.modalidade) {
+      pendencias.push("Modalidade");
+    }
+
+    if (exigeDadosContratuais) {
+      if (!contrato.numero) {
+        pendencias.push("Número");
+      }
+
+      if (!contrato.fornecedor) {
+        pendencias.push("Fornecedor");
+      }
+
+      if (!(Number(contrato.valor) > 0 || contrato.valorTexto)) {
+        pendencias.push("Valor");
+      }
+
+      if (!contrato.inicio_vigencia) {
+        pendencias.push("Início da vigência");
+      }
+
+      if (!contrato.fim_vigencia) {
+        pendencias.push("Fim da vigência");
+      }
+    }
+
+    if ((contrato.status_excel === "VIGENTE" || contrato.status_excel === "ENCERRADO") && !contrato.gestor_fiscal) {
+      pendencias.push("Gestor/Fiscal");
+    }
+
+    return pendencias;
+  }
+
+  function resumirPendenciasCadastro(contrato) {
+    if (!contrato.pendenciasCadastro.length) {
+      return "Cadastro completo";
+    }
+
+    return "Pendente: " + contrato.pendenciasCadastro.join(", ");
+  }
+
   function calcularMetricas(contratos) {
     return {
       total: contratos.length,
@@ -916,6 +990,9 @@
       }).length,
       encerrado: contratos.filter(function (contrato) {
         return contrato.situacao.chave === "encerrado";
+      }).length,
+      pendenciasCadastro: contratos.filter(function (contrato) {
+        return contrato.pendenteCadastro;
       }).length,
       ativos: contratos.filter(function (contrato) {
         return contrato.situacao.chave === "regular" ||
@@ -945,9 +1022,14 @@
     DOM.metricas.semVigenciaMeta.textContent = metricas.semVigencia === 1
       ? "1 contrato sem data final válida"
       : metricas.semVigencia + " contratos sem data final válida";
+    DOM.metricas.pendencias.textContent = String(metricas.pendenciasCadastro);
+    DOM.metricas.pendenciasMeta.textContent = metricas.pendenciasCadastro === 1
+      ? "1 cadastro com campo relevante ausente"
+      : metricas.pendenciasCadastro + " cadastros com campos relevantes ausentes";
 
     DOM.resumoGeral.textContent =
       metricas.ativos + " ativos, " +
+      metricas.pendenciasCadastro + " com pendência cadastral, " +
       metricas.semVigencia + " sem vigência e " +
       metricas.encerrado + " encerrados no recorte atual.";
 
@@ -989,6 +1071,9 @@
       const urgentes = contratos.filter(function (contrato) {
         return contrato.situacao.chave === "urgente";
       }).length;
+      const pendentes = contratos.filter(function (contrato) {
+        return contrato.pendenteCadastro;
+      }).length;
       const categoriasInternas = new Set(contratos.map(function (contrato) {
         return contrato.categoria;
       })).size;
@@ -1015,6 +1100,9 @@
       fatos.appendChild(criarChipArea(formatarMoeda(valorTotal)));
       fatos.appendChild(criarChipArea(
         urgentes + (urgentes === 1 ? " urgente" : " urgentes")
+      ));
+      fatos.appendChild(criarChipArea(
+        pendentes + (pendentes === 1 ? " pendência" : " pendências")
       ));
       fatos.appendChild(criarChipArea(
         categoriasInternas + (categoriasInternas === 1 ? " categoria" : " categorias")
@@ -1131,6 +1219,33 @@
 
     itens.forEach(function (contrato) {
       DOM.listaPendencias.appendChild(criarItemLista(contrato, contrato.status_excel || "Sem status"));
+    });
+  }
+
+  function preencherListaDadosPendentes() {
+    const itens = state.filtrados.filter(function (contrato) {
+      return contrato.pendenteCadastro;
+    }).slice().sort(function (a, b) {
+      const diferenca = b.pendenciasCadastro.length - a.pendenciasCadastro.length;
+      if (diferenca !== 0) {
+        return diferenca;
+      }
+
+      return obterComparador(state.filtros.ordenacao)(a, b);
+    }).slice(0, 6);
+
+    DOM.listaDadosPendentes.replaceChildren();
+
+    if (!itens.length) {
+      DOM.listaDadosPendentes.appendChild(criarItemListaVazio("Não há contratos com pendência cadastral no recorte atual."));
+      return;
+    }
+
+    itens.forEach(function (contrato) {
+      DOM.listaDadosPendentes.appendChild(criarItemLista(
+        contrato,
+        contrato.pendenciasCadastro.join(", ")
+      ));
     });
   }
 
@@ -1267,6 +1382,9 @@
     const urgentes = contratos.filter(function (contrato) {
       return contrato.situacao.chave === "urgente";
     }).length;
+    const pendentes = contratos.filter(function (contrato) {
+      return contrato.pendenteCadastro;
+    }).length;
     const categoriasInternas = new Set(contratos.map(function (contrato) {
       return contrato.categoria;
     })).size;
@@ -1290,6 +1408,7 @@
     [
       contratos.length + " visíveis",
       formatarMoeda(totalValor),
+      pendentes + (pendentes === 1 ? " com pendência cadastral" : " com pendências cadastrais"),
       categoriasInternas + (categoriasInternas === 1 ? " categoria interna" : " categorias internas"),
       urgentes + " em risco imediato"
     ].forEach(function (texto) {
@@ -1329,6 +1448,10 @@
       const celulaVigencia = document.createElement("td");
       const celulaValor = document.createElement("td");
       const celulaSituacao = document.createElement("td");
+      const detalheSituacao = [
+        contrato.status_excel || "",
+        contrato.pendenteCadastro ? contrato.resumoPendenciasCadastro : ""
+      ].filter(Boolean).join(" • ");
 
       linha.tabIndex = 0;
       linha.setAttribute("role", "button");
@@ -1340,6 +1463,7 @@
       celulaVigencia.dataset.label = colunas[4];
       celulaValor.dataset.label = colunas[5];
       celulaSituacao.dataset.label = colunas[6];
+      celulaValor.className = "contracts-table__cell--value";
 
       celulaContrato.appendChild(criarCelulaResumo(
         contrato.numero || "Sem número",
@@ -1368,16 +1492,22 @@
 
       celulaValor.appendChild(criarCelulaSimples(
         obterTextoValorContrato(contrato),
-        contrato.valorTexto ? formatarMoeda(contrato.valor) : "Valor numérico"
+        ""
       ));
 
       const situacaoWrap = document.createElement("div");
       situacaoWrap.className = "contracts-table__main";
       situacaoWrap.appendChild(criarBadgeSituacao(contrato));
-      if (contrato.status_excel) {
+      if (contrato.pendenteCadastro) {
+        const pendenciaChip = document.createElement("span");
+        pendenciaChip.className = "status-chip status-chip--pending-data";
+        pendenciaChip.textContent = "Dados pendentes";
+        situacaoWrap.appendChild(pendenciaChip);
+      }
+      if (detalheSituacao) {
         const apoioStatus = document.createElement("span");
         apoioStatus.className = "contracts-table__sub";
-        apoioStatus.textContent = contrato.status_excel;
+        apoioStatus.textContent = detalheSituacao;
         situacaoWrap.appendChild(apoioStatus);
       }
       celulaSituacao.appendChild(situacaoWrap);
@@ -1559,6 +1689,7 @@
     adicionarItemDrawer("Fim da vigência", formatarData(contrato.fim_vigencia));
     adicionarItemDrawer("Prazo calculado", formatarResumoDias(contrato.situacao.diasRestantes));
     adicionarItemDrawer("Gestor e fiscal", contrato.gestor_fiscal || "Não informado");
+    adicionarItemDrawer("Pendências de cadastro", contrato.resumoPendenciasCadastro);
     adicionarItemDrawer("Observações", contrato.observacoes || "Sem observações registradas");
   }
 
@@ -1609,6 +1740,7 @@
       "Fim vigência",
       "Situação",
       "Status Excel",
+      "Pendências cadastrais",
       "Observações",
       "Gestor/Fiscal"
     ];
@@ -1637,6 +1769,7 @@
       contrato.fim_vigencia || "",
       contrato.situacao.rotulo,
       contrato.status_excel || "",
+      contrato.pendenciasCadastro.join(", "),
       contrato.observacoes || "",
       contrato.gestor_fiscal || ""
     ];
@@ -1698,6 +1831,7 @@
     renderizarGradeAreas();
     preencherListaVencimentos();
     preencherListaPendencias();
+    preencherListaDadosPendentes();
     preencherDistribuicao();
     renderizarSecoes();
     mostrarMensagem("", "info");

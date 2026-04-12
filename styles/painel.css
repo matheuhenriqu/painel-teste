@@ -454,7 +454,7 @@ a {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
 }
 
@@ -479,9 +479,15 @@ a {
   background: linear-gradient(180deg, #fff 0, #f7fbff 100%);
 }
 
+.metric-card--pending {
+  border-top-color: #9a6b1a;
+  background: linear-gradient(180deg, #fff 0, #fffaf0 100%);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
+  align-items: start;
   gap: 14px;
 }
 
@@ -499,7 +505,7 @@ a {
 
 .filters-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -567,7 +573,7 @@ a {
 
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -964,6 +970,12 @@ a {
   color: var(--texto2);
 }
 
+.status-chip--pending-data {
+  border-color: rgba(154, 107, 26, 0.22);
+  background: #fff7e7;
+  color: #9a6b1a;
+}
+
 .category-section__actions {
   display: flex;
   align-items: center;
@@ -1035,6 +1047,18 @@ a {
   color: var(--texto3);
   font-size: 13px;
   line-height: 1.45;
+}
+
+.contracts-table__cell--value,
+.contracts-table__cell--value .contracts-table__main,
+.contracts-table__cell--value .contracts-table__sub {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.contracts-table__cell--value .contracts-table__main {
+  font-variant-numeric: tabular-nums;
 }
 
 .results-note {
@@ -1366,6 +1390,12 @@ a {
     color: var(--texto4);
   }
 
+  .contracts-table__cell--value,
+  .contracts-table__cell--value .contracts-table__main,
+  .contracts-table__cell--value .contracts-table__sub {
+    white-space: nowrap;
+  }
+
   .results-note {
     padding: 0 14px 14px;
   }
@@ -1429,5 +1459,12 @@ a {
 
   .drawer.is-open .drawer__panel {
     transform: translateY(0);
+  }
+}
+
+@media (min-width: 1121px) {
+  .filters-panel {
+    position: sticky;
+    top: calc(12px + var(--safe-top));
   }
 }
