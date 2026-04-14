@@ -1,5 +1,13 @@
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 .page-shell {
-  width: min(calc(100% - 48px), 1320px);
+  width: min(calc(100% - 48px - env(safe-area-inset-left) - env(safe-area-inset-right)), 1320px);
   max-width: 1320px;
 }
 
@@ -482,13 +490,13 @@ html[data-theme="dark"] .scroll-top {
 
 @media (max-width: 1023.98px) {
   .page-shell {
-    width: min(calc(100% - 32px), 1320px);
+    width: min(calc(100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)), 1320px);
   }
 }
 
 @media (max-width: 767.98px) {
   .page-shell {
-    width: min(calc(100% - 24px), 1320px);
+    width: min(calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)), 1320px);
   }
 
   .app-toast {
@@ -515,7 +523,7 @@ html[data-theme="dark"] .scroll-top {
   }
 
   .page-shell {
-    width: min(calc(100% - 24px), 1320px);
+    width: min(calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)), 1320px);
   }
 
   .kpi-card__value {
