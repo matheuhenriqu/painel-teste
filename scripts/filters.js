@@ -29,6 +29,10 @@ import { createThemeController } from "./theme.js";
   "use strict";
 
   const COLLAPSIBLE_KEY = "iguape-painel-collapsible-v1";
+  const MOBILE_COLLAPSED_SECTION_IDS = [
+    "secao-radar-vencimentos",
+    "secao-distribuicao"
+  ];
   const DEFAULT_FILTERS = {
     tipo: "",
     ano: "",
@@ -240,6 +244,7 @@ import { createThemeController } from "./theme.js";
     syncMobileViewportMetrics();
     syncFiltersLayoutForViewport();
     bindCollapsiblePersistence();
+    applyResponsiveSectionDefaults();
     initStickyFiltersObserver();
     initLazySections();
     initModules();
@@ -747,14 +752,54 @@ import { createThemeController } from "./theme.js";
 
   function bindCollapsiblePersistence() {
     document.querySelectorAll(".js-collapsible").forEach(function (details) {
+      details.dataset.initialOpen = details.hasAttribute("open") ? "true" : "false";
       const stored = readCollapsibleState(details.id);
       if (typeof stored === "boolean") {
         details.open = stored;
       }
 
       details.addEventListener("toggle", function () {
+        if (details.dataset.responsiveDefaulting === "true") {
+          details.dataset.responsiveDefaulting = "false";
+          return;
+        }
+
         writeCollapsibleState(details.id, details.open);
+
+        if (details.open && details.dataset.lazySection && state.dataset) {
+          window.requestAnimationFrame(function () {
+            scheduleRender({
+              syncUrl: false,
+              replaceUrl: true,
+              syncModalFromUrl: false
+            });
+          });
+        }
       });
+    });
+  }
+
+  function applyResponsiveSectionDefaults() {
+    MOBILE_COLLAPSED_SECTION_IDS.forEach(function (sectionId) {
+      const details = document.getElementById(sectionId);
+      if (!details) {
+        return;
+      }
+
+      if (typeof readCollapsibleState(sectionId) === "boolean") {
+        return;
+      }
+
+      const shouldOpen = isMobileViewport()
+        ? false
+        : details.dataset.initialOpen !== "false";
+
+      if (details.open === shouldOpen) {
+        return;
+      }
+
+      details.dataset.responsiveDefaulting = "true";
+      details.open = shouldOpen;
     });
   }
 
@@ -1310,6 +1355,7 @@ import { createThemeController } from "./theme.js";
       toggleMobileFilters(false, true);
     }
     syncFiltersLayoutForViewport();
+    applyResponsiveSectionDefaults();
     initStickyFiltersObserver();
 
     if (shouldRefreshLayout) {

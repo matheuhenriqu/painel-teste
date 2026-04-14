@@ -593,7 +593,7 @@ export function createTableRenderer(options) {
       const contract = document.createElement("span");
       contract.className = "contract-card__contract mono";
       contract.textContent = getDisplayText(record.contrato);
-      top.append(status, contract);
+      top.append(contract, status);
 
       const company = document.createElement("p");
       company.className = "contract-card__company";
@@ -602,7 +602,7 @@ export function createTableRenderer(options) {
       const object = document.createElement("p");
       object.className = "contract-card__object";
       object.title = getDisplayText(record.objeto);
-      setHighlightedContent(object, truncateText(getDisplayText(record.objeto), 90), searchQuery);
+      setHighlightedContent(object, getDisplayText(record.objeto), searchQuery);
 
       const footer = document.createElement("div");
       footer.className = "contract-card__footer";
