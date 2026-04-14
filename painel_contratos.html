@@ -2778,6 +2778,7 @@
 
     body.has-filters-sheet-open {
       overflow: hidden;
+      overscroll-behavior: none;
     }
 
     .filters-sticky-sentinel {
@@ -2796,8 +2797,8 @@
       gap: var(--space-3);
       padding: 0.8rem;
       border-radius: var(--radius-lg);
-      border: 1px solid transparent;
-      background: color-mix(in srgb, var(--bg-card) 95%, transparent);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       box-shadow: none;
       transition:
@@ -2806,14 +2807,22 @@
         background-color var(--transicao-normal);
     }
 
+    html[data-theme="dark"] .filters-shell__inner {
+      background: rgba(15, 23, 42, 0.88);
+      border-color: rgba(51, 65, 85, 0.9);
+    }
+
     .filters-shell.is-stuck .filters-shell__inner {
-      border-color: var(--borda-sutil);
       box-shadow: var(--sombra-lg);
     }
 
     .filters-form {
       display: grid;
       gap: var(--space-3);
+    }
+
+    .filters-desktop-slot {
+      display: contents;
     }
 
     .filters-toolbar {
@@ -3217,32 +3226,58 @@
         padding: 0.7rem;
       }
 
+      .filters-desktop-slot {
+        display: none;
+      }
+
       .filters-sheet-backdrop {
         position: fixed;
         inset: 0;
         z-index: calc(var(--z-modal-overlay) - 1);
         background: rgba(15, 23, 42, 0.48);
         backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transicao-normal);
       }
 
       .filters-sheet {
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        left: max(0.75rem, env(safe-area-inset-left));
+        right: max(0.75rem, env(safe-area-inset-right));
+        bottom: max(0px, env(safe-area-inset-bottom));
         z-index: var(--z-modal);
         display: grid;
         gap: var(--space-4);
+        max-height: min(85dvh, calc(100dvh - env(safe-area-inset-top) - 0.75rem));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
-        border-radius: 16px 16px 0 0;
+        border-radius: 20px 20px 0 0;
         background: var(--bg-card);
         box-shadow: var(--sombra-xl);
-        transform: translateY(105%);
-        transition: transform var(--transicao-suave);
+        transform: translateY(calc(100% + env(safe-area-inset-bottom) + 1rem));
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          transform var(--transicao-suave),
+          opacity var(--transicao-normal),
+          visibility 0s linear var(--transicao-normal);
       }
 
-      .filters-shell.is-sheet-open .filters-sheet {
+      .filters-overlays.is-open .filters-sheet-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .filters-overlays.is-open .filters-sheet {
         transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
       }
 
       .filters-sheet__header {
@@ -3250,6 +3285,12 @@
         align-items: flex-start;
         justify-content: space-between;
         gap: var(--space-3);
+      }
+
+      .filters-sheet__body {
+        display: grid;
+        gap: var(--space-3);
+        min-height: 0;
       }
 
       .filters-sheet__close {
@@ -3273,13 +3314,10 @@
 
     @media (min-width: 768px) {
       .filters-mobile-toggle,
-      .filters-sheet-backdrop,
-      .filters-sheet__header,
-      .filters-sheet__actions {
+      .filters-overlays {
         display: none !important;
       }
 
-      .filters-sheet,
       .filters-grid {
         display: contents;
       }
@@ -4508,6 +4546,7 @@
 
       <section class="filters-shell" aria-labelledby="titulo-filtros" aria-label="Ferramentas de filtro do painel">
         <div class="filters-shell__inner">
+          <h2 class="sr-only" id="titulo-filtros">Filtros do painel</h2>
           <form id="form-filtros" class="filters-form" autocomplete="off" role="search" aria-describedby="ajuda-busca">
             <div class="filters-toolbar">
               <div class="field field--search" id="campo-busca-shell">
@@ -4532,20 +4571,11 @@
               </button>
             </div>
 
-            <div class="filters-sheet-backdrop" id="filtros-mobile-backdrop" hidden></div>
-
-            <div class="filters-sheet" id="filtros-mobile-sheet" aria-labelledby="titulo-filtros">
-              <div class="filters-sheet__header">
-                <div>
-                  <h2 id="titulo-filtros">Filtros do painel</h2>
-                </div>
-                <button class="filters-sheet__close" type="button" id="fechar-filtros-mobile" aria-label="Fechar painel de filtros">✕</button>
-              </div>
-
-              <div class="filters-grid">
+            <div class="filters-desktop-slot" id="filtros-desktop-slot">
+              <div class="filters-grid" id="filtros-grid">
                 <div class="field field--select">
                   <label for="filtro-tipo">Tipo</label>
-                  <select id="filtro-tipo" name="tipo">
+                  <select id="filtro-tipo" name="tipo" form="form-filtros">
                     <option value="">Todos os tipos</option>
                     <option value="PREGÃO ELETRÔNICO">Pregão Eletrônico</option>
                     <option value="PRORROGAÇÃO">Prorrogação</option>
@@ -4565,7 +4595,7 @@
 
                 <div class="field field--select">
                   <label for="filtro-ano">Ano</label>
-                  <select id="filtro-ano" name="ano">
+                  <select id="filtro-ano" name="ano" form="form-filtros">
                     <option value="">Todos os anos</option>
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
@@ -4593,7 +4623,7 @@
 
                 <div class="field field--select">
                   <label for="filtro-gestor">Gestor</label>
-                  <select id="filtro-gestor" name="gestor">
+                  <select id="filtro-gestor" name="gestor" form="form-filtros">
                     <option value="">Todos os gestores</option>
                   </select>
                   <span class="field__icon field__icon--trailing" aria-hidden="true">
@@ -4605,7 +4635,7 @@
 
                 <div class="field field--select">
                   <label for="filtro-situacao">Situação</label>
-                  <select id="filtro-situacao" name="situacao">
+                  <select id="filtro-situacao" name="situacao" form="form-filtros">
                     <option value="">Todas as situações</option>
                     <option value="vigente">Vigente</option>
                     <option value="vence_30">Vence em até 30 dias</option>
@@ -4624,7 +4654,7 @@
 
                 <div class="field field--select">
                   <label for="filtro-ordenacao">Ordenar por</label>
-                  <select id="filtro-ordenacao" name="ordenacao">
+                  <select id="filtro-ordenacao" name="ordenacao" form="form-filtros">
                     <option value="vencimento_asc">Vencimento mais próximo</option>
                     <option value="valor_desc">Maior valor</option>
                     <option value="valor_asc">Menor valor</option>
@@ -4640,9 +4670,6 @@
                 </div>
               </div>
 
-              <div class="filters-sheet__actions">
-                <button class="toolbar-button toolbar-button--primary" type="button" id="aplicar-filtros-mobile">Aplicar filtros</button>
-              </div>
             </div>
           </form>
 
@@ -4822,6 +4849,22 @@
       </footer>
     </div>
   </main>
+
+  <div class="filters-overlays" id="filtros-overlays" aria-hidden="true">
+    <div class="filters-sheet-backdrop" id="filtros-mobile-backdrop" hidden></div>
+    <div class="filters-sheet" id="filtros-mobile-sheet" aria-labelledby="titulo-filtros-mobile" aria-modal="true" role="dialog" aria-hidden="true">
+      <div class="filters-sheet__header">
+        <div>
+          <h2 id="titulo-filtros-mobile">Filtros do painel</h2>
+        </div>
+        <button class="filters-sheet__close" type="button" id="fechar-filtros-mobile" aria-label="Fechar painel de filtros">✕</button>
+      </div>
+      <div class="filters-sheet__body" id="filtros-mobile-sheet-body"></div>
+      <div class="filters-sheet__actions">
+        <button class="toolbar-button toolbar-button--primary" type="button" id="aplicar-filtros-mobile">Fechar filtros</button>
+      </div>
+    </div>
+  </div>
 
   <div class="print-header" aria-hidden="true">
     <strong>Prefeitura de Iguape/SP — Painel de Contratos</strong>

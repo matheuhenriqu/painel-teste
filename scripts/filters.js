@@ -99,10 +99,14 @@ import { createThemeController } from "./theme.js";
     toast: document.getElementById("toast-feedback"),
     scrollProgressBar: document.getElementById("barra-progresso-scroll"),
     filtersForm: document.getElementById("form-filtros"),
+    filtersDesktopSlot: document.getElementById("filtros-desktop-slot"),
+    filtersGrid: document.getElementById("filtros-grid"),
     filtersStickySentinel: document.getElementById("marcador-sticky-filtros"),
     mobileFiltersToggle: document.getElementById("abrir-filtros-mobile"),
     mobileFiltersCount: document.getElementById("contador-filtros-mobile"),
+    mobileFiltersOverlay: document.getElementById("filtros-overlays"),
     mobileFiltersSheet: document.getElementById("filtros-mobile-sheet"),
+    mobileFiltersSheetBody: document.getElementById("filtros-mobile-sheet-body"),
     mobileFiltersBackdrop: document.getElementById("filtros-mobile-backdrop"),
     mobileFiltersClose: document.getElementById("fechar-filtros-mobile"),
     mobileFiltersApply: document.getElementById("aplicar-filtros-mobile"),
@@ -217,13 +221,19 @@ import { createThemeController } from "./theme.js";
     lazyObserver: null,
     stickyObserver: null,
     isPrinting: false,
-    prePrintEndedOpen: null
+    prePrintEndedOpen: null,
+    mobileFiltersOpen: false,
+    mobileFiltersScrollY: 0,
+    mobileFiltersHideTimer: 0,
+    mobileFiltersReturnFocus: null,
+    bodyLockStyles: null
   };
 
   init();
 
   function init() {
     bindStaticEvents();
+    syncFiltersLayoutForViewport();
     bindCollapsiblePersistence();
     initStickyFiltersObserver();
     initLazySections();
@@ -436,11 +446,16 @@ import { createThemeController } from "./theme.js";
 
   function bindStaticEvents() {
     if (DOM.filtersForm) {
-      DOM.filtersForm.addEventListener("change", handleFilterChange);
       DOM.filtersForm.addEventListener("submit", function (event) {
         event.preventDefault();
       });
     }
+
+    [DOM.filterTipo, DOM.filterAno, DOM.filterGestor, DOM.filterSituacao, DOM.filterOrdenacao]
+      .filter(Boolean)
+      .forEach(function (control) {
+        control.addEventListener("change", handleFilterChange);
+      });
 
     if (DOM.filterBusca) {
       DOM.filterBusca.addEventListener("input", handleSearchInput);
@@ -510,17 +525,19 @@ import { createThemeController } from "./theme.js";
     });
 
     window.addEventListener("resize", function () {
-      if (!isMobileViewport()) {
-        toggleMobileFilters(false, true);
-      }
+      handleViewportChange();
     });
 
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && DOM.filtersShell && DOM.filtersShell.classList.contains("is-sheet-open")) {
+      if (event.key === "Escape" && state.mobileFiltersOpen) {
         event.preventDefault();
         toggleMobileFilters(false);
       }
     });
+
+    if (DOM.mobileFiltersSheet && "inert" in DOM.mobileFiltersSheet) {
+      DOM.mobileFiltersSheet.inert = true;
+    }
   }
 
   function bindOpenDetailsEvents(container, selector) {
@@ -1209,22 +1226,153 @@ import { createThemeController } from "./theme.js";
     scrollToResults();
   }
 
+  function handleViewportChange() {
+    if (!isMobileViewport()) {
+      toggleMobileFilters(false, true);
+    }
+    syncFiltersLayoutForViewport();
+  }
+
+  function syncFiltersLayoutForViewport() {
+    if (!DOM.filtersGrid || !DOM.filtersDesktopSlot || !DOM.mobileFiltersSheetBody) {
+      return;
+    }
+
+    const nextParent = isMobileViewport()
+      ? DOM.mobileFiltersSheetBody
+      : DOM.filtersDesktopSlot;
+
+    if (DOM.filtersGrid.parentElement !== nextParent) {
+      nextParent.appendChild(DOM.filtersGrid);
+    }
+  }
+
+  function lockMobileFiltersScroll() {
+    if (state.bodyLockStyles) {
+      return;
+    }
+
+    const body = document.body;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const scrollbarGap = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+
+    state.mobileFiltersScrollY = scrollY;
+    state.bodyLockStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight
+    };
+
+    body.style.position = "fixed";
+    body.style.top = "-" + scrollY + "px";
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    if (scrollbarGap > 0) {
+      body.style.paddingRight = scrollbarGap + "px";
+    }
+  }
+
+  function unlockMobileFiltersScroll() {
+    if (!state.bodyLockStyles) {
+      return;
+    }
+
+    const body = document.body;
+    const scrollY = state.mobileFiltersScrollY || 0;
+
+    body.style.position = state.bodyLockStyles.position;
+    body.style.top = state.bodyLockStyles.top;
+    body.style.left = state.bodyLockStyles.left;
+    body.style.right = state.bodyLockStyles.right;
+    body.style.width = state.bodyLockStyles.width;
+    body.style.overflow = state.bodyLockStyles.overflow;
+    body.style.paddingRight = state.bodyLockStyles.paddingRight;
+
+    state.bodyLockStyles = null;
+    state.mobileFiltersScrollY = 0;
+
+    window.requestAnimationFrame(function () {
+      window.scrollTo(0, scrollY);
+    });
+  }
+
   function toggleMobileFilters(open, silent) {
-    if (!DOM.filtersShell || !DOM.mobileFiltersToggle || !DOM.mobileFiltersBackdrop) {
+    if (
+      !DOM.filtersShell ||
+      !DOM.mobileFiltersToggle ||
+      !DOM.mobileFiltersBackdrop ||
+      !DOM.mobileFiltersOverlay ||
+      !DOM.mobileFiltersSheet
+    ) {
       return;
     }
 
     const shouldOpen = Boolean(open);
+    if (shouldOpen && !isMobileViewport()) {
+      return;
+    }
+
+    if (shouldOpen) {
+      syncFiltersLayoutForViewport();
+    }
+
+    if (state.mobileFiltersOpen === shouldOpen) {
+      return;
+    }
+
+    window.clearTimeout(state.mobileFiltersHideTimer);
+    state.mobileFiltersHideTimer = 0;
+    state.mobileFiltersOpen = shouldOpen;
+
     DOM.filtersShell.classList.toggle("is-sheet-open", shouldOpen);
+    DOM.mobileFiltersOverlay.classList.toggle("is-open", shouldOpen);
+    DOM.mobileFiltersOverlay.setAttribute("aria-hidden", String(!shouldOpen));
+    DOM.mobileFiltersSheet.setAttribute("aria-hidden", String(!shouldOpen));
     DOM.mobileFiltersToggle.setAttribute("aria-expanded", String(shouldOpen));
-    DOM.mobileFiltersBackdrop.hidden = !shouldOpen;
     document.body.classList.toggle("has-filters-sheet-open", shouldOpen);
 
-    if (!silent && shouldOpen && DOM.mobileFiltersClose) {
+    if ("inert" in DOM.mobileFiltersSheet) {
+      DOM.mobileFiltersSheet.inert = !shouldOpen;
+    }
+
+    if (shouldOpen) {
+      state.mobileFiltersReturnFocus = document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : DOM.mobileFiltersToggle;
+      DOM.mobileFiltersBackdrop.hidden = false;
+      lockMobileFiltersScroll();
+
       window.requestAnimationFrame(function () {
-        DOM.mobileFiltersClose.focus();
+        if (DOM.mobileFiltersClose) {
+          DOM.mobileFiltersClose.focus();
+        }
+      });
+
+      return;
+    }
+
+    unlockMobileFiltersScroll();
+    state.mobileFiltersHideTimer = window.setTimeout(function () {
+      DOM.mobileFiltersBackdrop.hidden = true;
+      state.mobileFiltersHideTimer = 0;
+    }, 260);
+
+    if (!silent) {
+      const returnFocus = state.mobileFiltersReturnFocus || DOM.mobileFiltersToggle;
+      window.requestAnimationFrame(function () {
+        if (returnFocus && typeof returnFocus.focus === "function") {
+          returnFocus.focus();
+        }
       });
     }
+
+    state.mobileFiltersReturnFocus = null;
   }
 
   function isMobileViewport() {

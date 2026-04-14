@@ -251,21 +251,6 @@ html[data-theme="dark"] .context-strip {
   color: var(--cor-pendente);
 }
 
-.filters-shell__inner {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  backdrop-filter: blur(12px);
-}
-
-html[data-theme="dark"] .filters-shell__inner {
-  background: rgba(15, 23, 42, 0.88);
-  border-color: rgba(51, 65, 85, 0.9);
-}
-
-.filters-shell.is-stuck .filters-shell__inner {
-  box-shadow: var(--sombra-lg);
-}
-
 .field {
   transition: box-shadow var(--transicao-rapida), border-color var(--transicao-rapida), background-color var(--transicao-rapida);
 }
