@@ -57,7 +57,9 @@ export function createModalController(options) {
     activeRecord: null,
     isClosing: false,
     focusBeforeOpen: null,
-    feedbackTimer: 0
+    feedbackTimer: 0,
+    bodyLockStyles: null,
+    scrollY: 0
   };
 
   bindEvents();
@@ -157,6 +159,7 @@ export function createModalController(options) {
     config.root.classList.remove("is-closing");
 
     fillModal(record);
+    lockPageScroll();
 
     if (typeof config.root.showModal === "function" && !config.root.open) {
       config.root.showModal();
@@ -219,6 +222,7 @@ export function createModalController(options) {
         config.root.removeAttribute("open");
       }
       clearFeedback();
+      unlockPageScroll();
 
       if (state.focusBeforeOpen && typeof state.focusBeforeOpen.focus === "function") {
         state.focusBeforeOpen.focus();
@@ -237,6 +241,61 @@ export function createModalController(options) {
     state.isClosing = true;
     config.root.classList.add("is-closing");
     window.setTimeout(finish, CLOSE_ANIMATION_MS);
+  }
+
+  function lockPageScroll() {
+    if (state.bodyLockStyles) {
+      return;
+    }
+
+    const body = document.body;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const scrollbarGap = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+
+    state.scrollY = scrollY;
+    state.bodyLockStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight
+    };
+
+    body.style.position = "fixed";
+    body.style.top = "-" + scrollY + "px";
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    if (scrollbarGap > 0) {
+      body.style.paddingRight = scrollbarGap + "px";
+    }
+  }
+
+  function unlockPageScroll() {
+    if (!state.bodyLockStyles) {
+      return;
+    }
+
+    const body = document.body;
+    const scrollY = state.scrollY || 0;
+
+    body.style.position = state.bodyLockStyles.position;
+    body.style.top = state.bodyLockStyles.top;
+    body.style.left = state.bodyLockStyles.left;
+    body.style.right = state.bodyLockStyles.right;
+    body.style.width = state.bodyLockStyles.width;
+    body.style.overflow = state.bodyLockStyles.overflow;
+    body.style.paddingRight = state.bodyLockStyles.paddingRight;
+
+    state.bodyLockStyles = null;
+    state.scrollY = 0;
+
+    window.requestAnimationFrame(function () {
+      window.scrollTo(0, scrollY);
+    });
   }
 
   function handleKeydown(event) {

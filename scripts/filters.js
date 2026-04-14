@@ -228,13 +228,16 @@ import { createThemeController } from "./theme.js";
     mobileFiltersReturnFocus: null,
     bodyLockStyles: null,
     resizeRenderTimer: 0,
-    viewportWidth: window.innerWidth || document.documentElement.clientWidth || 0
+    viewportWidth: window.innerWidth || document.documentElement.clientWidth || 0,
+    viewportMetricsFrame: 0,
+    stickyFallbackBound: false
   };
 
   init();
 
   function init() {
     bindStaticEvents();
+    syncMobileViewportMetrics();
     syncFiltersLayoutForViewport();
     bindCollapsiblePersistence();
     initStickyFiltersObserver();
@@ -530,6 +533,15 @@ import { createThemeController } from "./theme.js";
       handleViewportChange();
     });
 
+    window.addEventListener("orientationchange", function () {
+      handleViewportChange();
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", requestViewportMetricsSync);
+      window.visualViewport.addEventListener("scroll", requestViewportMetricsSync);
+    }
+
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape" && state.mobileFiltersOpen) {
         event.preventDefault();
@@ -587,9 +599,17 @@ import { createThemeController } from "./theme.js";
     }
 
     if (!("IntersectionObserver" in window)) {
-      window.addEventListener("scroll", updateStickyState, { passive: true });
+      if (!state.stickyFallbackBound) {
+        window.addEventListener("scroll", updateStickyState, { passive: true });
+        state.stickyFallbackBound = true;
+      }
       updateStickyState();
       return;
+    }
+
+    const stickyTop = getStickyTopOffset();
+    if (state.stickyObserver) {
+      state.stickyObserver.disconnect();
     }
 
     state.stickyObserver = new IntersectionObserver(function (entries) {
@@ -597,7 +617,7 @@ import { createThemeController } from "./theme.js";
       DOM.filtersShell.classList.toggle("is-stuck", !entry.isIntersecting);
     }, {
       threshold: 1,
-      rootMargin: "-56px 0px 0px 0px"
+      rootMargin: "-" + stickyTop + "px 0px 0px 0px"
     });
 
     state.stickyObserver.observe(DOM.filtersStickySentinel);
@@ -609,7 +629,55 @@ import { createThemeController } from "./theme.js";
     }
 
     const rect = DOM.filtersStickySentinel.getBoundingClientRect();
-    DOM.filtersShell.classList.toggle("is-stuck", rect.top < 56);
+    DOM.filtersShell.classList.toggle("is-stuck", rect.top < getStickyTopOffset());
+  }
+
+  function getStickyTopOffset() {
+    if (!DOM.filtersShell) {
+      return 56;
+    }
+
+    const topValue = window.getComputedStyle(DOM.filtersShell).top;
+    const parsed = Number.parseFloat(topValue);
+    return Number.isFinite(parsed) ? parsed : 56;
+  }
+
+  function requestViewportMetricsSync() {
+    if (state.viewportMetricsFrame) {
+      return;
+    }
+
+    state.viewportMetricsFrame = window.requestAnimationFrame(function () {
+      state.viewportMetricsFrame = 0;
+      syncMobileViewportMetrics();
+      updateStickyState();
+    });
+  }
+
+  function syncMobileViewportMetrics() {
+    const rootStyle = document.documentElement.style;
+
+    if (!isMobileViewport()) {
+      rootStyle.removeProperty("--mobile-viewport-height");
+      rootStyle.removeProperty("--mobile-overlay-offset-bottom");
+      return;
+    }
+
+    let viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    let overlayOffsetBottom = 0;
+
+    if (window.visualViewport) {
+      viewportHeight = Math.round(window.visualViewport.height);
+      overlayOffsetBottom = Math.max(
+        0,
+        Math.round(window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop))
+      );
+    }
+
+    if (viewportHeight > 0) {
+      rootStyle.setProperty("--mobile-viewport-height", viewportHeight + "px");
+    }
+    rootStyle.setProperty("--mobile-overlay-offset-bottom", overlayOffsetBottom + "px");
   }
 
   function syncMetadata(dataset) {
@@ -1233,11 +1301,13 @@ import { createThemeController } from "./theme.js";
     const shouldRefreshLayout = state.dataset && Math.abs(nextViewportWidth - state.viewportWidth) > 24;
 
     state.viewportWidth = nextViewportWidth;
+    syncMobileViewportMetrics();
 
     if (!isMobileViewport()) {
       toggleMobileFilters(false, true);
     }
     syncFiltersLayoutForViewport();
+    initStickyFiltersObserver();
 
     if (shouldRefreshLayout) {
       window.clearTimeout(state.resizeRenderTimer);
@@ -1337,6 +1407,7 @@ import { createThemeController } from "./theme.js";
 
     if (shouldOpen) {
       syncFiltersLayoutForViewport();
+      syncMobileViewportMetrics();
     }
 
     if (state.mobileFiltersOpen === shouldOpen) {
@@ -1364,6 +1435,7 @@ import { createThemeController } from "./theme.js";
         : DOM.mobileFiltersToggle;
       DOM.mobileFiltersBackdrop.hidden = false;
       lockMobileFiltersScroll();
+      requestViewportMetricsSync();
 
       window.requestAnimationFrame(function () {
         if (DOM.mobileFiltersClose) {
@@ -1375,6 +1447,7 @@ import { createThemeController } from "./theme.js";
     }
 
     unlockMobileFiltersScroll();
+    requestViewportMetricsSync();
     state.mobileFiltersHideTimer = window.setTimeout(function () {
       DOM.mobileFiltersBackdrop.hidden = true;
       state.mobileFiltersHideTimer = 0;
