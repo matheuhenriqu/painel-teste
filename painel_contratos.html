@@ -3065,11 +3065,16 @@
     .content-stack {
       display: grid;
       gap: var(--space-3);
+      width: 100%;
+      min-width: 0;
     }
 
     .panel-section,
     .results-section,
     .app-footer {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
       border: 1px solid var(--borda-sutil);
       border-radius: var(--radius-lg);
       background: var(--bg-card);
@@ -3125,6 +3130,46 @@
 
     .panel-section__body {
       padding: var(--space-3) var(--space-4) var(--space-4);
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .content-stack > *,
+    .analytics-grid,
+    .analytics-grid > *,
+    .chart-card,
+    .chart-frame,
+    .chart-host,
+    .chart-donut-layout,
+    .chart-legend,
+    .type-groups,
+    .type-group,
+    .type-group__body,
+    .contract-group,
+    .contract-group__body,
+    .contract-group__table-wrap,
+    .contract-group__cards {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .content-stack,
+    .panel-section,
+    .panel-section__body,
+    .analytics-grid,
+    .chart-card,
+    .chart-host,
+    .chart-donut-layout {
+      overflow-x: hidden;
+      overflow-x: clip;
+    }
+
+    .chart-host svg {
+      max-width: 100%;
+      overflow: hidden;
     }
 
     .pill {
