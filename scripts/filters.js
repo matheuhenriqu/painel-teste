@@ -2409,10 +2409,7 @@ import { createThemeController } from "./theme.js";
 
   function truncateText(value, limit) {
     const text = String(value || "").trim();
-    if (text.length <= limit) {
-      return text;
-    }
-    return text.slice(0, Math.max(0, limit - 3)).trimEnd() + "...";
+    return text;
   }
 
   function sanitizeSearchInput(value) {

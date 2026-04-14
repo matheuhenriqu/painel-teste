@@ -1039,11 +1039,15 @@
       margin: 0;
       font-size: 0.92rem;
       font-weight: 800;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .urgent-card__object {
       margin: 0;
       color: var(--text-muted);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .urgent-card__meta {
@@ -1090,6 +1094,8 @@
       margin: 0;
       font-size: 0.92rem;
       font-weight: 800;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .pending-item__badges {
@@ -1284,12 +1290,16 @@
       margin: 0;
       font-size: 0.82rem;
       font-weight: 800;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .chart-tooltip__line {
       margin: 0.2rem 0 0;
       color: var(--text-muted);
       font-size: 0.76rem;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .chart-empty {
@@ -3560,7 +3570,9 @@
       color: var(--texto-secundario);
       font-size: var(--font-sm);
       font-weight: 600;
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contract-group__chevron {
@@ -3579,7 +3591,7 @@
 
     .contracts-table {
       width: 100%;
-      table-layout: fixed;
+      table-layout: auto;
       border-collapse: collapse;
       background: var(--bg-card);
     }
@@ -3638,27 +3650,22 @@
     .contracts-table__cell {
       color: var(--texto-primario);
       font-size: var(--font-sm);
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contracts-table__cell--contract {
       font-family: var(--font-mono);
       font-weight: 500;
-      white-space: nowrap;
     }
 
     .contracts-table__cell--company {
       font-weight: 600;
       text-transform: uppercase;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .contracts-table__cell--object {
-      max-width: 250px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       color: var(--texto-secundario);
     }
 
@@ -3666,7 +3673,6 @@
     .contracts-table__cell--dias {
       font-family: var(--font-mono);
       text-align: right;
-      white-space: nowrap;
     }
 
     .contracts-table__cell--value {
@@ -3675,7 +3681,7 @@
 
     .contracts-table__cell--vencimento,
     .contracts-table__cell--status {
-      white-space: nowrap;
+      white-space: normal;
     }
 
     .days-chip {
@@ -3724,7 +3730,8 @@
       font-weight: 700;
       letter-spacing: var(--tracking-wider);
       text-transform: uppercase;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     .status-badge--vigente {
@@ -3824,7 +3831,8 @@
       font-size: var(--font-sm);
       font-weight: 600;
       color: var(--texto-secundario);
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contract-card__company {
@@ -3833,6 +3841,8 @@
       font-weight: 600;
       color: var(--texto-primario);
       text-transform: uppercase;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contract-card__object {
@@ -3840,10 +3850,8 @@
       font-size: var(--font-sm);
       line-height: 1.45;
       color: var(--texto-secundario);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contract-card__value {
@@ -3851,7 +3859,8 @@
       font-size: var(--font-sm);
       font-weight: 700;
       color: var(--texto-primario);
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .contract-card__due {
