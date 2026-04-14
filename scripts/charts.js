@@ -32,7 +32,9 @@ export function renderDonut(data, container, options) {
   const records = Array.isArray(data) ? data : [];
   const settings = Object.assign(
     {
-      onTypeSelect: null
+      onTypeSelect: null,
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico."
     },
     options || {}
   );
@@ -45,7 +47,7 @@ export function renderDonut(data, container, options) {
 
   const entries = buildTypeEntries(records);
   if (!entries.length) {
-    container.appendChild(createEmptyChart("Nenhum contrato no recorte", "A distribuição por tipo será exibida aqui quando houver resultados."));
+    container.appendChild(createEmptyChart(settings.emptyTitle, settings.emptyMessage));
     return;
   }
 
@@ -172,7 +174,9 @@ export function renderTimeline(data, container, options) {
   const records = Array.isArray(data) ? data : [];
   const settings = Object.assign(
     {
-      onContractSelect: null
+      onContractSelect: null,
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para visualizar a timeline."
     },
     options || {}
   );
@@ -195,7 +199,7 @@ export function renderTimeline(data, container, options) {
     });
 
   if (!urgent.length) {
-    container.appendChild(createEmptyChart("Nenhum vencimento nos próximos 90 dias ✓", "Quando houver contratos nessa janela, a timeline mostrará os pontos de risco aqui."));
+    container.appendChild(createEmptyChart(settings.emptyTitle, settings.emptyMessage));
     return;
   }
 
@@ -316,9 +320,9 @@ export function renderTimeline(data, container, options) {
     bubble.setAttribute("aria-label", (record.contrato || "Contrato") + " vence em " + record.dias_para_vencimento + " dias");
 
     bindInteractiveShape(bubble, {
-      title: (record.empresa || "Sem empresa").toUpperCase(),
+      title: getDisplayText(record.empresa).toUpperCase(),
       lines: [
-        truncateText(record.objeto || "Objeto não informado", 70),
+        truncateText(record.objeto || "Não informado", 70),
         formatCurrency(record.valor) + " • " + formatDate(record.vencimento)
       ],
       container: container,
@@ -340,8 +344,8 @@ export function renderTimeline(data, container, options) {
   frame.append(svg);
   container.append(frame, tooltip, createScreenReaderTable("Timeline de vencimentos", ["Contrato", "Empresa", "Dias", "Vencimento", "Valor"], urgent.map(function (record) {
     return [
-      record.contrato || "—",
-      record.empresa || "—",
+      getDisplayText(record.contrato),
+      getDisplayText(record.empresa),
       String(record.dias_para_vencimento),
       formatDate(record.vencimento),
       formatCurrency(record.valor)
@@ -359,7 +363,9 @@ export function renderBars(data, container, options) {
   const records = Array.isArray(data) ? data : [];
   const settings = Object.assign(
     {
-      onTypeSelect: null
+      onTypeSelect: null,
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico."
     },
     options || {}
   );
@@ -372,7 +378,7 @@ export function renderBars(data, container, options) {
 
   const years = buildYearEntries(records);
   if (!years.length) {
-    container.appendChild(createEmptyChart("Sem dados por ano", "As barras empilhadas serão exibidas aqui quando houver contratos no recorte."));
+    container.appendChild(createEmptyChart(settings.emptyTitle, settings.emptyMessage));
     return;
   }
 
@@ -485,7 +491,9 @@ export function renderGauge(value, container, options) {
   const settings = Object.assign(
     {
       completeCount: 0,
-      totalCount: 0
+      totalCount: 0,
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico."
     },
     options || {}
   );
@@ -495,6 +503,11 @@ export function renderGauge(value, container, options) {
   }
 
   clearContainer(container);
+
+  if (!settings.totalCount) {
+    container.appendChild(createEmptyChart(settings.emptyTitle, settings.emptyMessage));
+    return;
+  }
 
   const frame = createElement("div", "chart-frame chart-frame--gauge");
   const svg = createSvgElement("svg");
@@ -807,6 +820,11 @@ function parseYearValue(value) {
 function truncateText(value, limit) {
   const text = String(value || "").trim();
   return text;
+}
+
+function getDisplayText(value) {
+  const text = String(value || "").trim();
+  return text || "Não informado";
 }
 
 function createElement(tag, className, text) {

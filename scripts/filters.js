@@ -403,7 +403,6 @@ import { createThemeController } from "./theme.js";
         replaceUrl: true,
         syncModalFromUrl: true
       });
-
       clearKpiLoading(document);
       disableControls(false);
       if (state.loadingController) {
@@ -426,6 +425,9 @@ import { createThemeController } from "./theme.js";
         clearLoadMessage(DOM.loadMessage);
       }
     } catch (error) {
+      state.dataset = null;
+      state.latestFiltered = [];
+      state.filterCache.clear();
       clearKpiLoading(document);
       disableControls(true);
       if (state.loadingController) {
@@ -433,10 +435,11 @@ import { createThemeController } from "./theme.js";
           clearTables: true
         });
       }
+      renderLoadFailureView();
       const retryButton = renderLoadMessage(DOM.loadMessage, {
         type: "error",
-        title: "Falha ao carregar contratos.json",
-        message: error.message || "Não foi possível carregar os dados do painel.",
+        title: "Não foi possível carregar os dados.",
+        message: "Verifique a conexão e tente novamente.",
         actionLabel: "Tentar novamente",
         actionId: "retry-carregar-dados"
       });
@@ -681,7 +684,7 @@ import { createThemeController } from "./theme.js";
   }
 
   function syncMetadata(dataset) {
-    const dateLabel = dataset.metadata.gerado_data_formatada || "Não informado";
+    const dateLabel = dataset.metadata.gerado_data_formatada || "Sem data";
     const dateTimeLabel = formatHumanDateTime(dataset.metadata.gerado_em_formatado || dateLabel);
     const relativeUpdate = formatRelativeUpdate(dataset.metadata.gerado_em);
     const footerLabel = dataset.cache.used
@@ -1164,7 +1167,7 @@ import { createThemeController } from "./theme.js";
       state.filterCache.clear();
       refreshAllSelects();
       scheduleRender();
-    }, 300);
+    }, 250);
   }
 
   function handleSearchKeydown(event) {
@@ -1807,6 +1810,89 @@ import { createThemeController } from "./theme.js";
     }
   }
 
+  function renderLoadFailureView() {
+    if (state.tableRenderer) {
+      state.tableRenderer.clear();
+    }
+
+    if (DOM.gruposTipo) {
+      DOM.gruposTipo.replaceChildren(
+        createMessageState({
+          title: "Não foi possível carregar os dados.",
+          message: "Tente novamente para recarregar a listagem do painel.",
+          buttonLabel: "Tentar novamente",
+          role: "alert",
+          onClick: bootstrap
+        })
+      );
+    }
+
+    if (DOM.gruposEncerrados) {
+      DOM.gruposEncerrados.replaceChildren();
+    }
+
+    if (DOM.encerradosCounter) {
+      DOM.encerradosCounter.textContent = "0";
+    }
+
+    if (DOM.radarTimeline) {
+      DOM.radarTimeline.replaceChildren(
+        createMessageState({
+          title: "Não foi possível carregar os dados.",
+          message: "Os gráficos serão exibidos assim que o carregamento funcionar novamente."
+        })
+      );
+    }
+
+    if (DOM.radarList) {
+      DOM.radarList.replaceChildren(
+        createMessageState({
+          title: "Não foi possível carregar os dados.",
+          message: "Os alertas de vencimento dependem do carregamento dos contratos."
+        })
+      );
+    }
+
+    if (DOM.pendenciasList) {
+      DOM.pendenciasList.replaceChildren(
+        createMessageState({
+          title: "Não foi possível carregar os dados.",
+          message: "As pendências cadastrais serão exibidas após um novo carregamento."
+        })
+      );
+    }
+
+    [DOM.donutChart, DOM.gaugeChart, DOM.barsChart].forEach(function (container) {
+      if (container) {
+        container.replaceChildren(
+          createMessageState({
+            title: "Não foi possível carregar os dados.",
+            message: "Os gráficos analíticos serão renderizados após a próxima tentativa."
+          })
+        );
+      }
+    });
+
+    if (DOM.distribuicaoTable) {
+      const tbody = DOM.distribuicaoTable.querySelector("tbody");
+      if (tbody) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.appendChild(
+          createMessageState({
+            title: "Não foi possível carregar os dados.",
+            message: "O resumo tabular depende do carregamento do conjunto de contratos."
+          })
+        );
+        row.appendChild(cell);
+        tbody.replaceChildren(row);
+      }
+    }
+
+    resetSummaryForLoadFailure();
+  }
+
   function renderChips() {
     if (!DOM.chips || !DOM.templates.chip) {
       return;
@@ -1910,12 +1996,15 @@ import { createThemeController } from "./theme.js";
     setKpiState(document.getElementById(KPI_NO_DUE_KEY), totals.semVigencia);
     setKpiState(document.getElementById(KPI_PENDING_KEY), totals.pendencias);
 
-    setCardFill(document.getElementById(KPI_TOTAL_KEY), totals.total, state.dataset.metadata.total_registros || totals.total);
+    const datasetTotal = state.dataset && state.dataset.metadata
+      ? (state.dataset.metadata.total_registros || totals.total)
+      : totals.total;
+    setCardFill(document.getElementById(KPI_TOTAL_KEY), totals.total, datasetTotal);
     setCardFill(document.getElementById(KPI_VALUE_KEY), totals.valor, getDatasetTotalValue());
-    setCardFill(document.getElementById(KPI_30_KEY), totals.vence30, state.dataset.metadata.total_registros || 1);
-    setCardFill(document.getElementById(KPI_90_KEY), totals.vence90, state.dataset.metadata.total_registros || 1);
-    setCardFill(document.getElementById(KPI_NO_DUE_KEY), totals.semVigencia, state.dataset.metadata.total_registros || 1);
-    setCardFill(document.getElementById(KPI_PENDING_KEY), totals.pendencias, state.dataset.metadata.total_registros || 1);
+    setCardFill(document.getElementById(KPI_30_KEY), totals.vence30, datasetTotal || 1);
+    setCardFill(document.getElementById(KPI_90_KEY), totals.vence90, datasetTotal || 1);
+    setCardFill(document.getElementById(KPI_NO_DUE_KEY), totals.semVigencia, datasetTotal || 1);
+    setCardFill(document.getElementById(KPI_PENDING_KEY), totals.pendencias, datasetTotal || 1);
 
     syncPrintKpis(totals);
     syncContextStrip(totals);
@@ -1923,6 +2012,9 @@ import { createThemeController } from "./theme.js";
   }
 
   function getDatasetTotalValue() {
+    if (!state.dataset) {
+      return 0;
+    }
     return state.dataset.contratos.reduce(function (sum, record) {
       return sum + (record.valor || 0);
     }, 0);
@@ -1980,6 +2072,12 @@ import { createThemeController } from "./theme.js";
     }
 
     renderTimeline(records, DOM.radarTimeline, {
+      emptyTitle: records.length === 0
+        ? "Nenhum contrato corresponde aos filtros selecionados."
+        : "Nenhum vencimento nos próximos 90 dias.",
+      emptyMessage: records.length === 0
+        ? "Ajuste ou limpe os filtros para visualizar a timeline."
+        : "Quando houver contratos nessa janela, a timeline mostrará os pontos de risco aqui.",
       onContractSelect: function (contractId) {
         if (state.modalController) {
           state.modalController.openById(contractId, {
@@ -1993,10 +2091,16 @@ import { createThemeController } from "./theme.js";
     DOM.radarList.replaceChildren();
 
     if (!urgent.length) {
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.textContent = "Nenhum contrato com vencimento nos próximos 90 dias.";
-      DOM.radarList.appendChild(empty);
+      DOM.radarList.appendChild(
+        createMessageState({
+          title: records.length === 0
+            ? "Nenhum contrato corresponde aos filtros selecionados."
+            : "Nenhum contrato com vencimento nos próximos 90 dias.",
+          message: records.length === 0
+            ? "Ajuste ou limpe os filtros para voltar a exibir os alertas."
+            : "Quando houver contratos nessa janela, os alertas aparecerão aqui."
+        })
+      );
       return;
     }
 
@@ -2019,10 +2123,10 @@ import { createThemeController } from "./theme.js";
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", "Abrir detalhes do contrato " + (record.contrato || record.id));
 
-      setHighlightedContent(company, record.empresa || "Sem empresa", state.filters.busca);
+      setHighlightedContent(company, getDisplayText(record.empresa), state.filters.busca);
       status.className = "status-badge " + record.situacao.badgeClass;
       status.textContent = record.dias_para_vencimento + " dias";
-      setHighlightedContent(object, truncateText(record.objeto || "Objeto não informado", 84), state.filters.busca);
+      setHighlightedContent(object, truncateText(record.objeto || "Não informado", 84), state.filters.busca);
 
       if (pills[0]) {
         pills[0].textContent = record.valor == null ? "—" : formatCurrency(record.valor);
@@ -2051,10 +2155,16 @@ import { createThemeController } from "./theme.js";
     DOM.pendenciasList.replaceChildren();
 
     if (!pendentes.length) {
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.textContent = "Nenhum contrato com dados pendentes no recorte atual.";
-      DOM.pendenciasList.appendChild(empty);
+      DOM.pendenciasList.appendChild(
+        createMessageState({
+          title: records.length === 0
+            ? "Nenhum contrato corresponde aos filtros selecionados."
+            : "Nenhum contrato com dados pendentes no recorte atual.",
+          message: records.length === 0
+            ? "Ajuste ou limpe os filtros para voltar a exibir esta lista."
+            : "Quando houver pendências no recorte atual, elas serão exibidas aqui."
+        })
+      );
       return;
     }
 
@@ -2071,7 +2181,7 @@ import { createThemeController } from "./theme.js";
 
       setHighlightedContent(
         title,
-        (record.contrato || "Sem contrato") + " — " + (record.empresa || "Sem empresa"),
+        getDisplayText(record.contrato) + " — " + getDisplayText(record.empresa),
         state.filters.busca
       );
 
@@ -2112,12 +2222,18 @@ import { createThemeController } from "./theme.js";
     }
 
     renderDonut(records, DOM.donutChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
       onTypeSelect: applyTypeFilter
     });
     renderBars(records, DOM.barsChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
       onTypeSelect: applyTypeFilter
     });
     renderGauge(getCompletenessPercent(records), DOM.gaugeChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
       completeCount: records.filter(function (record) {
         return record.campos_pendentes.length === 0;
       }).length,
@@ -2165,7 +2281,9 @@ import { createThemeController } from "./theme.js";
       cell.dataset.label = "Tipo";
       const empty = document.createElement("div");
       empty.className = "empty-state";
-      empty.textContent = "Sem contratos no recorte atual.";
+      empty.setAttribute("role", "status");
+      empty.setAttribute("aria-live", "polite");
+      empty.textContent = "Nenhum contrato corresponde aos filtros selecionados.";
       cell.appendChild(empty);
       row.appendChild(cell);
       tbody.appendChild(row);
@@ -2218,6 +2336,102 @@ import { createThemeController } from "./theme.js";
     if (isEmpty) {
       section.open = false;
     }
+  }
+
+  function createMessageState(config) {
+    const settings = Object.assign(
+      {
+        title: "",
+        message: "",
+        buttonLabel: "",
+        role: "status",
+        onClick: null
+      },
+      config || {}
+    );
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "empty-state empty-state--search";
+    wrapper.setAttribute("role", settings.role);
+    wrapper.setAttribute("aria-live", settings.role === "alert" ? "assertive" : "polite");
+
+    const title = document.createElement("p");
+    title.className = "empty-state__title";
+    title.textContent = settings.title;
+
+    const message = document.createElement("p");
+    message.className = "empty-state__text";
+    message.textContent = settings.message;
+
+    wrapper.append(title, message);
+
+    if (settings.buttonLabel && typeof settings.onClick === "function") {
+      const actions = document.createElement("div");
+      actions.className = "empty-state__actions";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "toolbar-button toolbar-button--primary";
+      button.textContent = settings.buttonLabel;
+      button.addEventListener("click", settings.onClick);
+
+      actions.appendChild(button);
+      wrapper.appendChild(actions);
+    }
+
+    return wrapper;
+  }
+
+  function resetSummaryForLoadFailure() {
+    setStaticCount(DOM.kpis.total, 0);
+    setStaticCount(DOM.kpis.valor, 0, "compact_currency");
+    setStaticCount(DOM.kpis.vence30, 0);
+    setStaticCount(DOM.kpis.vence90, 0);
+    setStaticCount(DOM.kpis.semVigencia, 0);
+    setStaticCount(DOM.kpis.pendencias, 0);
+
+    [
+      document.getElementById(KPI_TOTAL_KEY),
+      document.getElementById(KPI_VALUE_KEY),
+      document.getElementById(KPI_30_KEY),
+      document.getElementById(KPI_90_KEY),
+      document.getElementById(KPI_NO_DUE_KEY),
+      document.getElementById(KPI_PENDING_KEY)
+    ].forEach(function (card) {
+      setKpiState(card, 0);
+      setCardFill(card, 0, 1);
+    });
+
+    updateResultBadge([]);
+    if (DOM.resultsCounter) {
+      DOM.resultsCounter.textContent = "0";
+    }
+    if (DOM.radarCounter) {
+      DOM.radarCounter.textContent = "0";
+    }
+    if (DOM.pendenciasCounter) {
+      DOM.pendenciasCounter.textContent = "0";
+    }
+    if (DOM.distribuicaoCounter) {
+      DOM.distribuicaoCounter.textContent = "0";
+    }
+    syncContextStrip({
+      total: 0,
+      valor: 0,
+      vence30: 0,
+      vence90: 0,
+      semVigencia: 0,
+      pendencias: 0
+    });
+    syncPrintKpis({
+      total: 0,
+      valor: 0,
+      vence30: 0,
+      vence90: 0,
+      semVigencia: 0,
+      pendencias: 0
+    });
+    updateUrgentAnnouncements(0);
   }
 
   function syncContextStrip(totals) {
@@ -2496,7 +2710,7 @@ import { createThemeController } from "./theme.js";
   }
 
   function formatHumanDateTime(value) {
-    return String(value || "Não informado").replace(",", " às");
+    return String(value || "Sem data").replace(",", " às");
   }
 
   function formatCompactDateTime(value) {
@@ -2682,5 +2896,10 @@ import { createThemeController } from "./theme.js";
 
   function coalesceNumber(value, fallback) {
     return value == null ? fallback : value;
+  }
+
+  function getDisplayText(value) {
+    const text = String(value || "").trim();
+    return text || "Não informado";
   }
 })();

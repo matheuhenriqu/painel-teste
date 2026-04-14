@@ -389,28 +389,28 @@ export function createModalController(options) {
     setText(config.title, "Contrato " + (record.contrato || record.id));
     setText(
       config.subtitle,
-      [titleCase(record.tipo || "Sem tipo"), record.modalidade || "Modalidade não informada"]
+      [titleCase(record.tipo || "Não informado"), record.modalidade || "Não informado"]
         .filter(Boolean)
         .join(" • ")
     );
-    setText(config.tipo, titleCase(record.tipo || "—"));
-    setText(config.modalidade, record.modalidade || "—");
-    setText(config.processo, record.processo || "—");
-    setText(config.ano, record.ano || "—");
-    setText(config.empresa, record.empresa || "—");
-    setText(config.objeto, record.objeto || "—");
+    setText(config.tipo, titleCase(record.tipo || "Não informado"));
+    setText(config.modalidade, record.modalidade || "Não informado");
+    setText(config.processo, record.processo || "Não informado");
+    setText(config.ano, record.ano || "Não informado");
+    setText(config.empresa, record.empresa || "Não informado");
+    setText(config.objeto, record.objeto || "Não informado");
     setText(config.valor, record.valor == null ? "—" : formatCurrency(record.valor));
-    setText(config.gestor, record.gestor || "—");
-    setText(config.fiscal, record.fiscal || (record.campos_pendentes.includes("fiscal") ? "— (pendente)" : "—"));
-    setText(config.dataInicio, record.data_inicio ? formatDate(record.data_inicio) : "—");
+    setText(config.gestor, record.gestor || "Não informado");
+    setText(config.fiscal, record.fiscal || (record.campos_pendentes.includes("fiscal") ? "Não informado (pendente)" : "Não informado"));
+    setText(config.dataInicio, record.data_inicio ? formatDate(record.data_inicio) : "Sem data");
     setText(
       config.dataVencimento,
-      record.vencimento ? formatDate(record.vencimento) : (specialStatus || "—")
+      record.vencimento ? formatDate(record.vencimento) : (specialStatus || "Sem data")
     );
     setText(config.dataHoje, formatDate(startOfToday()));
     setText(
       config.observacoes,
-      record.observacoes || (specialStatus ? "Status especial: " + specialStatus : "(nenhuma)")
+      record.observacoes || (specialStatus ? "Status especial: " + specialStatus : "Não informado")
     );
 
     if (config.status) {

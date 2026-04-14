@@ -63,6 +63,10 @@ export function createLoadingController(options) {
     [config.mainResultsContainer, config.endedResultsContainer].forEach(function (container) {
       if (container) {
         delete container.dataset.loadingSkeleton;
+        container.removeAttribute("role");
+        container.removeAttribute("aria-live");
+        container.removeAttribute("aria-busy");
+        container.removeAttribute("aria-label");
       }
     });
   }
@@ -79,6 +83,10 @@ export function createLoadingController(options) {
       }
       container.replaceChildren();
       delete container.dataset.loadingSkeleton;
+      container.removeAttribute("role");
+      container.removeAttribute("aria-live");
+      container.removeAttribute("aria-busy");
+      container.removeAttribute("aria-label");
     });
   }
 
@@ -268,6 +276,10 @@ function showTableSkeleton(container, groups) {
 
   container.replaceChildren(fragment);
   container.dataset.loadingSkeleton = "true";
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-busy", "true");
+  container.setAttribute("aria-label", "Carregando contratos");
 }
 
 function flashCard(card, direction) {

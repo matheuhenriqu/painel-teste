@@ -97,8 +97,8 @@ export function createTableRenderer(options) {
       order: settings.order,
       searchQuery: settings.searchQuery,
       emptySuggestion: settings.emptySuggestion,
-      emptyTitle: "Nenhum contrato encontrado",
-      emptyText: "Ajuste ou remova filtros para ampliar o recorte atual."
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyText: "Ajuste os filtros aplicados ou limpe todos para voltar a exibir a listagem."
     });
 
     if (config.endedCounter) {
@@ -509,20 +509,20 @@ export function createTableRenderer(options) {
     const contractCell = document.createElement("td");
     contractCell.className = "contracts-table__cell contracts-table__cell--contract mono";
     contractCell.dataset.label = "Contrato";
-    contractCell.textContent = record.contrato || "—";
+    contractCell.textContent = getDisplayText(record.contrato);
 
     const companyCell = document.createElement("td");
     companyCell.className = "contracts-table__cell contracts-table__cell--company";
     companyCell.dataset.label = "Empresa";
-    setHighlightedContent(companyCell, uppercaseText(record.empresa) || "—", searchQuery);
+    setHighlightedContent(companyCell, uppercaseText(getDisplayText(record.empresa)), searchQuery);
 
     const objectCell = document.createElement("td");
     objectCell.className = "contracts-table__cell contracts-table__cell--object";
     objectCell.dataset.label = "Objeto";
-    objectCell.title = String(record.objeto || "");
+    objectCell.title = getDisplayText(record.objeto);
     setHighlightedContent(
       objectCell,
-      truncateText(record.objeto || "—", 50),
+      truncateText(getDisplayText(record.objeto), 50),
       searchQuery
     );
 
@@ -537,7 +537,7 @@ export function createTableRenderer(options) {
     const dueCell = document.createElement("td");
     dueCell.className = "contracts-table__cell contracts-table__cell--vencimento";
     dueCell.dataset.label = "Vencimento";
-    dueCell.textContent = record.vencimento ? formatDate(record.vencimento) : "—";
+    dueCell.textContent = record.vencimento ? formatDate(record.vencimento) : "Sem data";
 
     const daysCell = document.createElement("td");
     daysCell.className = "contracts-table__cell contracts-table__cell--dias mono";
@@ -592,17 +592,17 @@ export function createTableRenderer(options) {
 
       const contract = document.createElement("span");
       contract.className = "contract-card__contract mono";
-      contract.textContent = record.contrato || "—";
+      contract.textContent = getDisplayText(record.contrato);
       top.append(status, contract);
 
       const company = document.createElement("p");
       company.className = "contract-card__company";
-      setHighlightedContent(company, uppercaseText(record.empresa) || "—", searchQuery);
+      setHighlightedContent(company, uppercaseText(getDisplayText(record.empresa)), searchQuery);
 
       const object = document.createElement("p");
       object.className = "contract-card__object";
-      object.title = String(record.objeto || "");
-      setHighlightedContent(object, truncateText(record.objeto || "—", 90), searchQuery);
+      object.title = getDisplayText(record.objeto);
+      setHighlightedContent(object, truncateText(getDisplayText(record.objeto), 90), searchQuery);
 
       const footer = document.createElement("div");
       footer.className = "contract-card__footer";
@@ -667,6 +667,8 @@ export function createTableRenderer(options) {
   function createEmptyState(title, message, suggestion) {
     const wrapper = document.createElement("div");
     wrapper.className = "empty-state empty-state--search";
+    wrapper.setAttribute("role", "status");
+    wrapper.setAttribute("aria-live", "polite");
 
     const icon = document.createElement("div");
     icon.className = "empty-state__icon";
@@ -705,7 +707,7 @@ export function createTableRenderer(options) {
     clearButton.type = "button";
     clearButton.className = "toolbar-button toolbar-button--ghost";
     clearButton.dataset.emptyClear = "true";
-    clearButton.textContent = "Limpar todos os filtros";
+    clearButton.textContent = "Limpar filtros";
     actions.appendChild(clearButton);
 
     wrapper.append(icon, titleElement, text, suggestionLine, actions);
@@ -841,6 +843,11 @@ function truncateText(value, limit) {
   return text;
 }
 
+function getDisplayText(value) {
+  const text = String(value || "").trim();
+  return text || "Não informado";
+}
+
 function getDaysDisplay(record) {
   if (record.dias_para_vencimento == null) {
     return {
@@ -882,7 +889,7 @@ function getMobileDueLabel(record) {
       ? "Em andamento"
       : record.situacao && record.situacao.key === "nao_assinou"
         ? "Não assinou"
-        : "Vigência pendente";
+        : "Sem data";
   }
 
   if (record.dias_para_vencimento < 0) {

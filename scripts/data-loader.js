@@ -134,12 +134,12 @@ export function parseIsoDate(value) {
 
 export function formatDate(value) {
   const parsed = value instanceof Date ? value : parseIsoDate(value);
-  return parsed ? dateFormatter.format(parsed) : "Não informado";
+  return parsed ? dateFormatter.format(parsed) : "Sem data";
 }
 
 export function formatDateTime(value) {
   const parsed = value ? new Date(value) : null;
-  return parsed && !Number.isNaN(parsed.getTime()) ? dateTimeFormatter.format(parsed) : "Não informado";
+  return parsed && !Number.isNaN(parsed.getTime()) ? dateTimeFormatter.format(parsed) : "Sem data";
 }
 
 export function getStatusBadgeClass(situationKey) {
@@ -183,6 +183,9 @@ export function renderLoadMessage(container, options) {
   container.className = "load-banner";
   container.classList.add("load-banner--" + config.type);
   container.classList.remove("is-hidden");
+  container.setAttribute("role", config.type === "error" ? "alert" : "status");
+  container.setAttribute("aria-live", config.type === "error" ? "assertive" : "polite");
+  container.setAttribute("aria-atomic", "true");
   container.replaceChildren();
 
   const content = document.createElement("div");
@@ -218,6 +221,9 @@ export function clearLoadMessage(container) {
   }
 
   container.className = "load-banner is-hidden";
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-atomic", "true");
   container.replaceChildren();
 }
 
@@ -487,8 +493,8 @@ function normalizeMetadata(metadata, total) {
   const generatedAt = toNullableText(metadata.gerado_em);
   return {
     gerado_em: generatedAt,
-    gerado_em_formatado: generatedAt ? formatDateTime(generatedAt) : "Não informado",
-    gerado_data_formatada: generatedAt ? formatDate(generatedAt.slice(0, 10)) : "Não informado",
+    gerado_em_formatado: generatedAt ? formatDateTime(generatedAt) : "Sem data",
+    gerado_data_formatada: generatedAt ? formatDate(generatedAt.slice(0, 10)) : "Sem data",
     total_registros: Number.isInteger(Number(metadata.total_registros))
       ? Number(metadata.total_registros)
       : total,

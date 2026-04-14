@@ -5271,7 +5271,7 @@
                   <p>Pontos proporcionais ao valor do contrato e coloridos pelo risco de vencimento.</p>
                 </div>
               </div>
-              <div class="chart-host chart-host--timeline" id="grafico-timeline-vencimentos"></div>
+              <div class="chart-host chart-host--timeline" id="grafico-timeline-vencimentos" aria-live="polite"></div>
             </section>
             <div class="urgency-grid" id="lista-radar-vencimentos" aria-live="polite"></div>
           </div>
@@ -5317,7 +5317,7 @@
                     <p>Clique em uma fatia ou item da legenda para filtrar o painel.</p>
                   </div>
                 </div>
-                <div class="chart-host" id="grafico-donut-tipo"></div>
+                <div class="chart-host" id="grafico-donut-tipo" aria-live="polite"></div>
               </section>
 
               <section class="chart-card">
@@ -5327,7 +5327,7 @@
                     <p>Gauge semicircular do percentual sem campos pendentes no recorte.</p>
                   </div>
                 </div>
-                <div class="chart-host" id="grafico-gauge-completude"></div>
+                <div class="chart-host" id="grafico-gauge-completude" aria-live="polite"></div>
               </section>
 
               <section class="chart-card chart-card--full">
@@ -5337,7 +5337,7 @@
                     <p>Barras horizontais empilhadas por tipo, com leitura rápida da composição anual.</p>
                   </div>
                 </div>
-                <div class="chart-host" id="grafico-barras-ano"></div>
+                <div class="chart-host" id="grafico-barras-ano" aria-live="polite"></div>
               </section>
 
               <section class="chart-card chart-card--full">
@@ -5381,7 +5381,7 @@
           </summary>
           <div class="panel-section__body">
             <div class="type-groups" id="lista-grupos-tipo" aria-live="polite">
-              <div class="empty-state">Carregando contratos do recorte atual.</div>
+              <div class="empty-state" role="status" aria-live="polite">Carregando contratos do recorte atual.</div>
             </div>
           </div>
         </details>
