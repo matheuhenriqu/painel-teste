@@ -1131,6 +1131,10 @@
       grid-column: 1 / -1;
     }
 
+    .chart-card--timeline {
+      gap: 0.85rem;
+    }
+
     .chart-card__header {
       display: flex;
       align-items: flex-start;
@@ -1173,8 +1177,20 @@
       min-height: 260px;
     }
 
+    .chart-frame--timeline {
+      min-height: 280px;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--bg-soft) 54%, transparent), transparent 42%),
+        radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 10%, transparent), transparent 46%),
+        var(--surface);
+    }
+
     .chart-host {
       position: relative;
+    }
+
+    .chart-host--timeline {
+      isolation: isolate;
     }
 
     .chart-host svg {
@@ -1338,6 +1354,14 @@
 
     .timeline-zone {
       opacity: 0.12;
+    }
+
+    .timeline-zone-label {
+      fill: color-mix(in srgb, var(--text) 78%, transparent);
+      font-size: 11px;
+      font-family: var(--font-sans);
+      font-weight: 800;
+      letter-spacing: 0.02em;
     }
 
     .timeline-bubble {
@@ -2154,6 +2178,28 @@
 
       .chart-card--full {
         grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .chart-card--timeline {
+        padding: 0.9rem;
+      }
+
+      .chart-card--timeline .chart-card__header {
+        gap: 0.65rem;
+      }
+
+      .chart-card--timeline .chart-card__header h3 {
+        font-size: 0.96rem;
+      }
+
+      .chart-card--timeline .chart-card__header p {
+        font-size: 0.8rem;
+      }
+
+      .chart-frame--timeline {
+        min-height: 300px;
       }
     }
 
@@ -4754,14 +4800,14 @@
             </span>
           </summary>
           <div class="panel-section__body">
-            <section class="chart-card chart-card--full">
+            <section class="chart-card chart-card--full chart-card--timeline">
               <div class="chart-card__header">
                 <div>
                   <h3>Timeline dos próximos 90 dias</h3>
                   <p>Pontos proporcionais ao valor do contrato e coloridos pelo risco de vencimento.</p>
                 </div>
               </div>
-              <div class="chart-host" id="grafico-timeline-vencimentos"></div>
+              <div class="chart-host chart-host--timeline" id="grafico-timeline-vencimentos"></div>
             </section>
             <div class="urgency-grid" id="lista-radar-vencimentos" aria-live="polite"></div>
           </div>

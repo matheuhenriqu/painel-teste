@@ -205,14 +205,26 @@ export function renderTimeline(data, container, options) {
   const title = createSvgElement("title");
   const desc = createSvgElement("desc");
   const idBase = (container.id || "chart-timeline") + "-svg";
-  const width = 920;
-  const height = 260;
-  const padding = { top: 28, right: 28, bottom: 42, left: 32 };
+  const measuredWidth = Math.round(container.getBoundingClientRect().width || container.clientWidth || 0);
+  const width = Math.max(320, measuredWidth || 920);
+  const isCompact = width < 640;
+  const padding = {
+    top: isCompact ? 24 : 28,
+    right: isCompact ? 18 : 28,
+    bottom: isCompact ? 54 : 42,
+    left: isCompact ? 18 : 32
+  };
   const axisWidth = width - padding.left - padding.right;
-  const axisY = 196;
-  const laneCount = Math.max(3, Math.min(6, Math.ceil(urgent.length / 4)));
-  const laneGap = 26;
-  const laneTop = 68;
+  const laneCount = isCompact
+    ? Math.max(4, Math.min(8, Math.ceil(urgent.length / 3)))
+    : Math.max(3, Math.min(6, Math.ceil(urgent.length / 4)));
+  const laneGap = isCompact ? 30 : 26;
+  const laneTop = isCompact ? 66 : 68;
+  const laneJitter = isCompact ? 10 : 8;
+  const axisY = laneTop + (laneCount - 1) * laneGap + laneJitter + 24;
+  const height = axisY + padding.bottom;
+  const zoneY = laneTop - 28;
+  const zoneHeight = axisY - laneTop + 42;
   const maxValue = Math.max.apply(null, urgent.map(function (record) {
     return record.valor || 0;
   }).concat([1]));
@@ -229,21 +241,35 @@ export function renderTimeline(data, container, options) {
 
   const immediateZone = createSvgElement("rect");
   immediateZone.setAttribute("x", String(padding.left));
-  immediateZone.setAttribute("y", String(laneTop - 28));
+  immediateZone.setAttribute("y", String(zoneY));
   immediateZone.setAttribute("width", String(axisWidth * (30 / 90)));
-  immediateZone.setAttribute("height", String(axisY - laneTop + 42));
+  immediateZone.setAttribute("height", String(zoneHeight));
   immediateZone.setAttribute("fill", "var(--danger)");
   immediateZone.setAttribute("class", "timeline-zone");
 
   const cautionZone = createSvgElement("rect");
   cautionZone.setAttribute("x", String(padding.left + axisWidth * (30 / 90)));
-  cautionZone.setAttribute("y", String(laneTop - 28));
+  cautionZone.setAttribute("y", String(zoneY));
   cautionZone.setAttribute("width", String(axisWidth * (60 / 90)));
-  cautionZone.setAttribute("height", String(axisY - laneTop + 42));
+  cautionZone.setAttribute("height", String(zoneHeight));
   cautionZone.setAttribute("fill", "var(--warning)");
   cautionZone.setAttribute("class", "timeline-zone");
 
-  svg.append(immediateZone, cautionZone);
+  const immediateLabel = createSvgElement("text");
+  immediateLabel.setAttribute("x", String(padding.left + axisWidth * (15 / 90)));
+  immediateLabel.setAttribute("y", String(laneTop - 10));
+  immediateLabel.setAttribute("text-anchor", "middle");
+  immediateLabel.setAttribute("class", "timeline-zone-label");
+  immediateLabel.textContent = isCompact ? "0-30d" : "0-30 dias";
+
+  const cautionLabel = createSvgElement("text");
+  cautionLabel.setAttribute("x", String(padding.left + axisWidth * (60 / 90)));
+  cautionLabel.setAttribute("y", String(laneTop - 10));
+  cautionLabel.setAttribute("text-anchor", "middle");
+  cautionLabel.setAttribute("class", "timeline-zone-label");
+  cautionLabel.textContent = isCompact ? "31-90d" : "31-90 dias";
+
+  svg.append(immediateZone, cautionZone, immediateLabel, cautionLabel);
 
   [0, 30, 60, 90].forEach(function (tick) {
     const x = padding.left + (tick / 90) * axisWidth;
@@ -275,8 +301,8 @@ export function renderTimeline(data, container, options) {
   urgent.forEach(function (record, index) {
     const cx = padding.left + (record.dias_para_vencimento / 90) * axisWidth;
     const laneIndex = index % laneCount;
-    const cy = laneTop + laneIndex * laneGap + (index % 2 === 0 ? 0 : 8);
-    const radius = 5 + Math.sqrt((record.valor || 0) / maxValue) * 18;
+    const cy = laneTop + laneIndex * laneGap + (index % 2 === 0 ? 0 : laneJitter);
+    const radius = (isCompact ? 4 : 5) + Math.sqrt((record.valor || 0) / maxValue) * (isCompact ? 14 : 18);
     const bubble = createSvgElement("circle");
 
     bubble.setAttribute("cx", String(cx));

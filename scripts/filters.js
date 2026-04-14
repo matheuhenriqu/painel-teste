@@ -226,7 +226,9 @@ import { createThemeController } from "./theme.js";
     mobileFiltersScrollY: 0,
     mobileFiltersHideTimer: 0,
     mobileFiltersReturnFocus: null,
-    bodyLockStyles: null
+    bodyLockStyles: null,
+    resizeRenderTimer: 0,
+    viewportWidth: window.innerWidth || document.documentElement.clientWidth || 0
   };
 
   init();
@@ -1227,10 +1229,25 @@ import { createThemeController } from "./theme.js";
   }
 
   function handleViewportChange() {
+    const nextViewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const shouldRefreshLayout = state.dataset && Math.abs(nextViewportWidth - state.viewportWidth) > 24;
+
+    state.viewportWidth = nextViewportWidth;
+
     if (!isMobileViewport()) {
       toggleMobileFilters(false, true);
     }
     syncFiltersLayoutForViewport();
+
+    if (shouldRefreshLayout) {
+      window.clearTimeout(state.resizeRenderTimer);
+      state.resizeRenderTimer = window.setTimeout(function () {
+        state.resizeRenderTimer = 0;
+        scheduleRender({
+          syncUrl: false
+        });
+      }, 120);
+    }
   }
 
   function syncFiltersLayoutForViewport() {
