@@ -5399,21 +5399,23 @@
           </div>
         </details>
 
-        <details class="panel-section js-collapsible" id="secao-pendencias" data-lazy-section="pendencias" aria-label="Pendências cadastrais" open>
+        <details class="panel-section js-collapsible results-section" id="secao-listagem-principal" data-lazy-section="resultados" aria-labelledby="titulo-listagem-principal" aria-label="Listagem principal de contratos por tipo" open>
           <summary class="panel-section__summary">
             <span class="panel-section__summary-main">
-              <span class="panel-section__icon" aria-hidden="true">🧾</span>
+              <span class="panel-section__icon" aria-hidden="true">📚</span>
               <span>
-                <h2>Pendências cadastrais</h2>
+                <h2 id="titulo-listagem-principal">Listagem de contratos</h2>
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill" id="contador-pendencias">0</span>
+              <span class="pill" id="contador-listagem-principal">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
           <div class="panel-section__body">
-            <div class="pending-list" id="lista-pendencias" aria-live="polite"></div>
+            <div class="type-groups" id="lista-grupos-tipo" aria-live="polite">
+              <div class="empty-state" role="status" aria-live="polite">Carregando contratos do recorte atual.</div>
+            </div>
           </div>
         </details>
 
@@ -5488,23 +5490,21 @@
           </div>
         </details>
 
-        <details class="panel-section js-collapsible results-section" id="secao-listagem-principal" data-lazy-section="resultados" aria-labelledby="titulo-listagem-principal" aria-label="Listagem principal de contratos por tipo" open>
+        <details class="panel-section js-collapsible" id="secao-pendencias" data-lazy-section="pendencias" aria-label="Pendências cadastrais" open>
           <summary class="panel-section__summary">
             <span class="panel-section__summary-main">
-              <span class="panel-section__icon" aria-hidden="true">📚</span>
+              <span class="panel-section__icon" aria-hidden="true">🧾</span>
               <span>
-                <h2 id="titulo-listagem-principal">Listagem de contratos</h2>
+                <h2>Pendências cadastrais</h2>
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill" id="contador-listagem-principal">0</span>
+              <span class="pill" id="contador-pendencias">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
           <div class="panel-section__body">
-            <div class="type-groups" id="lista-grupos-tipo" aria-live="polite">
-              <div class="empty-state" role="status" aria-live="polite">Carregando contratos do recorte atual.</div>
-            </div>
+            <div class="pending-list" id="lista-pendencias" aria-live="polite"></div>
           </div>
         </details>
 
