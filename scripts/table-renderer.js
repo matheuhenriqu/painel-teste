@@ -454,6 +454,7 @@ export function createTableRenderer(options) {
     table.className = "table contracts-table";
 
     const caption = document.createElement("caption");
+    caption.className = "sr-only";
     caption.textContent = titleCase(tipo || "Sem tipo") + " — contratos do recorte atual";
     table.appendChild(caption);
 
