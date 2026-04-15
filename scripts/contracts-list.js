@@ -5,7 +5,7 @@ import {
   normalizeText,
   slugify,
   titleCase
-} from "./data-loader.js";
+} from "./utils.js";
 
 (function () {
   "use strict";

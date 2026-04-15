@@ -3,7 +3,7 @@ import {
   formatDate,
   formatDateTime,
   slugify
-} from "./data-loader.js";
+} from "./utils.js";
 import { setBusyButtonState } from "./loading.js";
 
 export function createExportController(options) {

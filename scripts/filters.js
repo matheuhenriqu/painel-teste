@@ -1,29 +1,32 @@
 import {
   clearKpiLoading,
   clearLoadMessage,
-  compareText,
-  formatCurrency,
-  formatDateTime,
   getSituationLabel,
   loadContracts,
-  normalizeText,
   renderLoadMessage,
-  setKpiLoading,
-  slugify,
-  titleCase
-} from "./data-loader.js";
+  setKpiLoading
+} from "./data.js";
 import {
   renderBars,
   renderDonut,
   renderGauge,
   renderTimeline
 } from "./charts.js";
+import { applyIndicators } from "./indicators.js";
 import { createExportController } from "./export.js";
 import { createLoadingController } from "./loading.js";
 import { createShortcutsController } from "./shortcuts.js";
-import { createTableRenderer } from "./table-renderer.js";
+import { createTableRenderer } from "./contracts-list.js";
 import { createModalController } from "./modal.js";
 import { createThemeController } from "./theme.js";
+import {
+  compareText,
+  formatCurrency,
+  formatDateTime,
+  normalizeText,
+  slugify,
+  titleCase
+} from "./utils.js";
 
 (function () {
   "use strict";
@@ -148,6 +151,14 @@ import { createThemeController } from "./theme.js";
       vence90: document.querySelector("#" + KPI_90_KEY + " .js-countup"),
       semVigencia: document.querySelector("#" + KPI_NO_DUE_KEY + " .js-countup"),
       pendencias: document.querySelector("#" + KPI_PENDING_KEY + " .js-countup")
+    },
+    kpiCardElements: {
+      total: document.getElementById(KPI_TOTAL_KEY),
+      valor: document.getElementById(KPI_VALUE_KEY),
+      vence30: document.getElementById(KPI_30_KEY),
+      vence90: document.getElementById(KPI_90_KEY),
+      semVigencia: document.getElementById(KPI_NO_DUE_KEY),
+      pendencias: document.getElementById(KPI_PENDING_KEY)
     },
     radarSection: document.getElementById("secao-radar-vencimentos"),
     radarCounter: document.getElementById("contador-radar-urgentes"),
@@ -2016,59 +2027,30 @@ import { createThemeController } from "./theme.js";
   }
 
   function renderKpis(records) {
-    const totals = {
-      total: records.length,
-      valor: records.reduce(function (sum, record) {
-        return sum + (record.valor || 0);
-      }, 0),
-      vence30: records.filter(function (record) {
-        return record.situacao.key === "vence_30";
-      }).length,
-      vence90: records.filter(function (record) {
-        return record.situacao.key === "vence_31_90";
-      }).length,
-      semVigencia: records.filter(function (record) {
-        return record.situacao.key === "sem_vigencia";
-      }).length,
-      pendencias: records.filter(function (record) {
-        return record.campos_pendentes.length > 0;
-      }).length
-    };
-
-    if (state.loadingController) {
-      state.loadingController.animateValue(DOM.kpis.total, totals.total, "number");
-      state.loadingController.animateValue(DOM.kpis.valor, totals.valor, "compact_currency");
-      state.loadingController.animateValue(DOM.kpis.vence30, totals.vence30, "number");
-      state.loadingController.animateValue(DOM.kpis.vence90, totals.vence90, "number");
-      state.loadingController.animateValue(DOM.kpis.semVigencia, totals.semVigencia, "number");
-      state.loadingController.animateValue(DOM.kpis.pendencias, totals.pendencias, "number");
-    } else {
-      setStaticCount(DOM.kpis.total, totals.total);
-      setStaticCount(DOM.kpis.valor, totals.valor, "compact_currency");
-      setStaticCount(DOM.kpis.vence30, totals.vence30);
-      setStaticCount(DOM.kpis.vence90, totals.vence90);
-      setStaticCount(DOM.kpis.semVigencia, totals.semVigencia);
-      setStaticCount(DOM.kpis.pendencias, totals.pendencias);
-    }
-
-    if (DOM.kpis.valor) {
-      DOM.kpis.valor.title = formatCurrency(totals.valor);
-    }
-
-    setKpiState(document.getElementById(KPI_30_KEY), totals.vence30);
-    setKpiState(document.getElementById(KPI_90_KEY), totals.vence90);
-    setKpiState(document.getElementById(KPI_NO_DUE_KEY), totals.semVigencia);
-    setKpiState(document.getElementById(KPI_PENDING_KEY), totals.pendencias);
-
-    const datasetTotal = state.dataset && state.dataset.metadata
-      ? (state.dataset.metadata.total_registros || totals.total)
-      : totals.total;
-    setCardFill(document.getElementById(KPI_TOTAL_KEY), totals.total, datasetTotal);
-    setCardFill(document.getElementById(KPI_VALUE_KEY), totals.valor, getDatasetTotalValue());
-    setCardFill(document.getElementById(KPI_30_KEY), totals.vence30, datasetTotal || 1);
-    setCardFill(document.getElementById(KPI_90_KEY), totals.vence90, datasetTotal || 1);
-    setCardFill(document.getElementById(KPI_NO_DUE_KEY), totals.semVigencia, datasetTotal || 1);
-    setCardFill(document.getElementById(KPI_PENDING_KEY), totals.pendencias, datasetTotal || 1);
+    const totals = applyIndicators({
+      totals: {
+        total: records.length,
+        valor: records.reduce(function (sum, record) {
+          return sum + (record.valor || 0);
+        }, 0),
+        vence30: records.filter(function (record) {
+          return record.situacao.key === "vence_30";
+        }).length,
+        vence90: records.filter(function (record) {
+          return record.situacao.key === "vence_31_90";
+        }).length,
+        semVigencia: records.filter(function (record) {
+          return record.situacao.key === "sem_vigencia";
+        }).length,
+        pendencias: records.filter(function (record) {
+          return record.campos_pendentes.length > 0;
+        }).length
+      },
+      dataset: state.dataset,
+      kpis: DOM.kpis,
+      cards: DOM.kpiCardElements,
+      loadingController: state.loadingController
+    });
 
     syncPrintKpis(totals);
     syncContextStrip(totals);
@@ -2458,23 +2440,19 @@ import { createThemeController } from "./theme.js";
   }
 
   function resetSummaryForLoadFailure() {
-    setStaticCount(DOM.kpis.total, 0);
-    setStaticCount(DOM.kpis.valor, 0, "compact_currency");
-    setStaticCount(DOM.kpis.vence30, 0);
-    setStaticCount(DOM.kpis.vence90, 0);
-    setStaticCount(DOM.kpis.semVigencia, 0);
-    setStaticCount(DOM.kpis.pendencias, 0);
-
-    [
-      document.getElementById(KPI_TOTAL_KEY),
-      document.getElementById(KPI_VALUE_KEY),
-      document.getElementById(KPI_30_KEY),
-      document.getElementById(KPI_90_KEY),
-      document.getElementById(KPI_NO_DUE_KEY),
-      document.getElementById(KPI_PENDING_KEY)
-    ].forEach(function (card) {
-      setKpiState(card, 0);
-      setCardFill(card, 0, 1);
+    applyIndicators({
+      totals: {
+        total: 0,
+        valor: 0,
+        vence30: 0,
+        vence90: 0,
+        semVigencia: 0,
+        pendencias: 0
+      },
+      dataset: null,
+      kpis: DOM.kpis,
+      cards: DOM.kpiCardElements,
+      loadingController: null
     });
 
     updateResultBadge([]);

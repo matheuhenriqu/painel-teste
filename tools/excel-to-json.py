@@ -470,10 +470,12 @@ def run(input_path: Path, output_json: Path, output_report: Path) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Limpa a planilha de contratos e gera JSON consolidado.")
+    parser = argparse.ArgumentParser(
+        description="Converte a planilha de contratos administrativos em contratos.json para o painel estatico."
+    )
     parser.add_argument(
         "--input",
-        default="/Users/matheuscosta/Downloads/CONTROLE_DE_PRAZOS_ORGANIZADO.xlsx",
+        required=True,
         help="Caminho do arquivo Excel de origem.",
     )
     parser.add_argument(

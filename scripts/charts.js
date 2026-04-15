@@ -3,7 +3,7 @@ import {
   formatCurrency,
   formatDate,
   titleCase
-} from "./data-loader.js";
+} from "./utils.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const TYPE_ORDER = [

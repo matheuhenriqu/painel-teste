@@ -1,55 +1,48 @@
 # Painel de Contratos de Iguape
 
-Painel estatico para consulta e acompanhamento de contratos administrativos da Prefeitura Municipal de Iguape/SP.
+Painel publico de contratos administrativos da Prefeitura Municipal de Iguape/SP, publicado como site estatico no GitHub Pages.
 
-Todos os dados publicados no site sao gerados a partir de uma unica planilha Excel mantida fora do repositorio.
+Os dados exibidos em `painel_contratos.html` sao lidos de `contratos.json` via `fetch()`. Nao ha backend nem dependencias pesadas, o que mantem a hospedagem simples e compativel com a raiz da branch `main`.
 
 ## Estrutura
 
-- `index.html`: entrada usada pelo GitHub Pages.
-- `painel_contratos.html`: pagina principal com a estrutura do painel.
-- `styles/painel.css`: camada visual responsiva do painel.
-- `scripts/painel.js`: logica de filtros, metricas, listagens e exportacao.
-- `contratos-data.js`: base de dados gerada a partir da planilha Excel.
-- `scripts/gerar-dados-contratos.py`: gerador oficial dos dados a partir do workbook consolidado.
-- `scripts/gerar-dados-contratos.ps1`: gerador legado do layout antigo.
-- `.gitignore`: impede o versionamento da planilha e de arquivos temporarios.
+- `index.html`: redireciona para a pagina principal do painel.
+- `painel_contratos.html`: shell HTML publicada no GitHub Pages.
+- `contratos.json`: base normalizada consumida pelo front-end.
+- `assets/`: identidade visual, logo institucional e favicon.
+- `styles/`: tokens, base visual, layout, componentes, graficos e responsividade.
+- `scripts/main.js`: ponto de entrada do painel.
+- `scripts/data.js`: carga, validacao, cache e normalizacao dos contratos.
+- `scripts/filters.js`: estado dos filtros, URL sync, chips ativos e orquestracao da interface.
+- `scripts/indicators.js`: calculo e renderizacao dos cards de indicadores.
+- `scripts/charts.js`: renderizacao dos graficos SVG.
+- `scripts/contracts-list.js`: cards, tabelas e agrupamentos da listagem.
+- `scripts/modal.js`: detalhes do contrato, foco e interacoes de teclado.
+- `scripts/export.js`: exportacao CSV e impressao.
+- `scripts/utils.js`: formatadores e helpers puros reutilizaveis.
+- `tools/excel-to-json.py`: conversao da planilha Excel para `contratos.json`.
 
 ## Atualizar os dados
 
-1. Atualize a planilha Excel consolidada de controle de prazos.
-2. Gere o arquivo de dados informando explicitamente o workbook:
+1. Atualize a planilha Excel consolidada fora do repositorio.
+2. Gere a nova base JSON:
 
 ```bash
-python3 scripts/gerar-dados-contratos.py --workbook "/caminho/para/CONTROLE_DE_PRAZOS_ORGANIZADO.xlsx"
+python tools/excel-to-json.py --input "/caminho/para/CONTROLE_DE_PRAZOS_ORGANIZADO.xlsx"
 ```
 
-3. Revise o arquivo `contratos-data.js`.
+3. Revise `contratos.json` e, se desejar, o relatorio textual gerado.
 4. Publique as alteracoes no GitHub.
-
-## O que o gerador faz
-
-- Le a aba consolidada do workbook.
-- Normaliza datas para `YYYY-MM-DD`.
-- Preserva `status_excel` e `valor_texto` quando o valor original nao e numerico.
-- Consolida gestor e fiscal em um unico campo textual.
-- Deriva `tipo` automaticamente como `Ata` ou `Contrato`.
-- Escreve `window.PAINEL_CONTRATOS_DATA = { ultimaAtualizacao, origemArquivo, contratos }`, expondo apenas o nome do arquivo de origem.
-
-## Interface
-
-- Hero com resumo executivo e metadados da base.
-- Filtros globais com sincronizacao na URL.
-- Indicadores do recorte atual.
-- Radar de vencimentos, pendencias de vigencia e distribuicao por categoria.
-- Tabelas por categoria com drawer de detalhes e exportacao em CSV.
 
 ## Publicacao
 
-O projeto foi preparado para publicar no GitHub Pages pela branch `main`, usando a raiz do repositorio.
+O painel foi preparado para funcionar diretamente no GitHub Pages usando a raiz do repositorio. A pagina publicada fica em:
 
-## Validacao recomendada
+- [https://matheuhenriqu.github.io/painel-teste/painel_contratos.html](https://matheuhenriqu.github.io/painel-teste/painel_contratos.html)
 
-- Conferir a contagem total de registros gerados.
-- Validar contratos criticos como `005/2025`, `ATA 20/2025`, `037/2025`, `005/2022`, `CE 003/2026`, `CE 009/2025` e `CE 008/2025`.
-- Abrir `index.html` ou `painel_contratos.html` localmente para revisar filtros, cards e exportacao CSV.
+## Manutencao
+
+- O front-end usa `type="module"` com `import/export` nativos.
+- Os estilos foram separados em folhas dedicadas para facilitar evolucao e dark mode.
+- Campos ausentes em `contratos.json` sao tratados em `scripts/data.js` por `normalizeContract(raw)`.
+- Funcoes puras compartilhadas ficam em `scripts/utils.js`.

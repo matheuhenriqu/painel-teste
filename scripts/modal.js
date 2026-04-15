@@ -1,11 +1,11 @@
 import {
   formatCurrency,
   formatDate,
-  getSpecialStatusLabel,
   parseIsoDate,
   startOfToday,
   titleCase
-} from "./data-loader.js";
+} from "./utils.js";
+import { getSpecialStatusLabel } from "./data.js";
 
 const CLOSE_ANIMATION_MS = 220;
 

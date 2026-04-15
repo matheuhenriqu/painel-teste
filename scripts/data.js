@@ -397,6 +397,18 @@ function sanitizeContract(item, index, referenceDate) {
   return cleanedRecord;
 }
 
+export function normalizeContract(raw, options) {
+  const settings = Object.assign(
+    {
+      index: 0,
+      referenceDate: undefined
+    },
+    options || {}
+  );
+
+  return sanitizeContract(raw, settings.index, settings.referenceDate);
+}
+
 function buildIndices(contracts) {
   const byId = new Map();
   const allIds = [];
@@ -507,7 +519,10 @@ function parseDataset(payload, referenceDate) {
   validatePayloadShape(payload);
 
   const contracts = payload.contratos.map(function (item, index) {
-    return sanitizeContract(item, index, referenceDate);
+    return normalizeContract(item, {
+      index: index,
+      referenceDate: referenceDate
+    });
   });
 
   const metadata = normalizeMetadata(payload.metadata, contracts.length);
