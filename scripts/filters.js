@@ -32,6 +32,7 @@ import {
   "use strict";
 
   const COLLAPSIBLE_KEY = "iguape-painel-collapsible-v1";
+  const RESULTS_VIEW_STORAGE_KEY = "iguape-painel-results-view-v1";
   const MOBILE_COLLAPSED_SECTION_IDS = [
     "secao-radar-vencimentos",
     "secao-distribuicao"
@@ -62,7 +63,7 @@ import {
     { value: "vigentes", param: "vigentes", label: "Vigentes" },
     { value: "vence_30", param: "vence-30", label: "Vence em 30 dias" },
     { value: "vence_31_90", param: "vence-31-90", label: "Vence em 31-90 dias" },
-    { value: "vigente_regular", param: "vigente-regular", label: "Vigente regular" },
+    { value: "vigente_regular", param: "vigente-regular", label: "Vigente" },
     { value: "encerrado", param: "encerrado", label: "Encerrado" },
     { value: "sem_vigencia", param: "sem-vigencia", label: "Sem vigência" },
     { value: "em_andamento", param: "em-andamento", label: "Em andamento" },
@@ -177,6 +178,7 @@ import {
     resultsSection: document.getElementById("secao-listagem-principal"),
     resultsCounter: document.getElementById("contador-listagem-principal"),
     gruposTipo: document.getElementById("lista-grupos-tipo"),
+    resultsViewButtons: document.querySelectorAll("[data-results-view]"),
     encerradosSection: document.getElementById("secao-encerrados"),
     encerradosCounter: document.getElementById("contador-encerrados"),
     gruposEncerrados: document.getElementById("lista-grupos-encerrados"),
@@ -199,6 +201,7 @@ import {
     modalPendencias: document.getElementById("modal-pendencias"),
     modalObservacoes: document.getElementById("modal-observacoes"),
     modalCopy: document.getElementById("modal-copiar-link"),
+    modalPrint: document.getElementById("modal-imprimir"),
     modalClose: document.getElementById("modal-fechar"),
     modalCloseTop: document.getElementById("modal-fechar-topo"),
     modalFeedback: document.getElementById("modal-feedback"),
@@ -243,6 +246,7 @@ import {
     mobileFiltersReturnFocus: null,
     bodyLockStyles: null,
     resizeRenderTimer: 0,
+    resultsViewMode: readResultsViewMode(),
     viewportWidth: window.innerWidth || document.documentElement.clientWidth || 0,
     viewportMetricsFrame: 0,
     stickyFallbackBound: false
@@ -257,6 +261,7 @@ import {
     syncFiltersShellMetrics();
     bindCollapsiblePersistence();
     applyResponsiveSectionDefaults();
+    applyResultsViewMode();
     initStickyFiltersObserver();
     initLazySections();
     initModules();
@@ -298,6 +303,7 @@ import {
       closeButton: DOM.modalClose,
       closeTopButton: DOM.modalCloseTop,
       copyButton: DOM.modalCopy,
+      printButton: DOM.modalPrint,
       feedback: DOM.modalFeedback,
       title: DOM.modalTitle,
       subtitle: DOM.modalSubtitle,
@@ -531,6 +537,10 @@ import {
 
     DOM.kpiCards.forEach(function (card) {
       card.addEventListener("click", handleKpiClick);
+    });
+
+    DOM.resultsViewButtons.forEach(function (button) {
+      button.addEventListener("click", handleResultsViewToggle);
     });
 
     bindOpenDetailsEvents(DOM.radarList, ".urgent-card[data-contract-id]");
@@ -1395,6 +1405,38 @@ import {
     }
   }
 
+  function handleResultsViewToggle(event) {
+    const button = event.currentTarget;
+    if (!button) {
+      return;
+    }
+
+    const nextMode = button.dataset.resultsView === "table" ? "table" : "cards";
+    if (state.resultsViewMode === nextMode) {
+      return;
+    }
+
+    state.resultsViewMode = nextMode;
+    writeResultsViewMode(nextMode);
+    applyResultsViewMode();
+  }
+
+  function applyResultsViewMode() {
+    const mode = state.resultsViewMode === "table" ? "table" : "cards";
+
+    [DOM.resultsSection, DOM.encerradosSection, DOM.gruposTipo, DOM.gruposEncerrados]
+      .filter(Boolean)
+      .forEach(function (element) {
+        element.dataset.viewMode = mode;
+      });
+
+    DOM.resultsViewButtons.forEach(function (button) {
+      const isActive = button.dataset.resultsView === mode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  }
+
   function syncFiltersLayoutForViewport() {
     if (!DOM.filtersGrid || !DOM.filtersDesktopSlot || !DOM.mobileFiltersSheetBody) {
       return;
@@ -1631,6 +1673,7 @@ import {
         disablePagination: settings.printMode,
         expandAll: settings.printMode
       });
+      applyResultsViewMode();
     }
     syncSummary(records);
     syncPrintContext(records);
@@ -1859,6 +1902,9 @@ import {
 
   function updateResultBadge(records) {
     const count = records.length;
+    const total = state.dataset && state.dataset.metadata
+      ? Number(state.dataset.metadata.total_registros || state.dataset.contratos.length || 0)
+      : count;
     if (DOM.badgeResultados) {
       let counter = DOM.contagemResultados;
       if (!counter || !DOM.badgeResultados.contains(counter)) {
@@ -1869,11 +1915,11 @@ import {
       }
 
       if (count === 0) {
-        DOM.badgeResultados.replaceChildren(document.createTextNode("Nenhum resultado"));
+        DOM.badgeResultados.replaceChildren(document.createTextNode("0 de " + total + " contratos"));
       } else {
         DOM.badgeResultados.replaceChildren(
           counter,
-          document.createTextNode(" contratos encontrados")
+          document.createTextNode(" de " + total + " contratos")
         );
         if (state.loadingController) {
           state.loadingController.animateValue(counter, count, "number");
@@ -2014,7 +2060,7 @@ import {
       DOM.chipPlaceholder.classList.toggle("is-hidden", chips.length > 0);
     }
     if (DOM.clearFilters) {
-      DOM.clearFilters.classList.toggle("is-hidden", chips.length < 2);
+      DOM.clearFilters.classList.toggle("is-hidden", chips.length === 0);
     }
     syncMobileFilterCount();
   }
@@ -3110,5 +3156,22 @@ import {
   function getDisplayText(value) {
     const text = String(value || "").trim();
     return text || "Não informado";
+  }
+
+  function readResultsViewMode() {
+    try {
+      const value = window.localStorage.getItem(RESULTS_VIEW_STORAGE_KEY);
+      return value === "table" ? "table" : "cards";
+    } catch (error) {
+      return "cards";
+    }
+  }
+
+  function writeResultsViewMode(value) {
+    try {
+      window.localStorage.setItem(RESULTS_VIEW_STORAGE_KEY, value === "table" ? "table" : "cards");
+    } catch (error) {
+      return;
+    }
   }
 })();

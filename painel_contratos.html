@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Painel de Contratos | Prefeitura Municipal de Iguape/SP</title>
   <meta name="description" content="Painel de acompanhamento de contratos administrativos da Prefeitura de Iguape/SP. Consulta pública com filtros, indicadores de vigência e exportação de dados.">
-  <meta name="theme-color" content="#1E40AF">
+  <meta name="theme-color" content="#1a5276">
   <meta name="color-scheme" content="light dark">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
   <meta property="og:title" content="Painel de Contratos | Iguape/SP">
@@ -46,63 +46,65 @@
           <img class="app-brand__logo" src="assets/logo-prefeitura-iguape.png" alt="Logo da Prefeitura de Iguape" width="28" height="28" decoding="async" fetchpriority="high">
         </span>
         <span class="app-brand__text">
-          <span class="app-brand__title">Painel de Contratos</span>
-          <span class="app-brand__separator" aria-hidden="true">·</span>
-          <span class="app-brand__city">Iguape/SP</span>
+          <span class="app-brand__kicker">Prefeitura Municipal de Iguape/SP</span>
+          <span class="app-brand__city">Portal público municipal</span>
         </span>
       </a>
 
-      <div class="header-actions">
-        <button class="header-icon-button" type="button" id="theme-toggle" aria-pressed="false" aria-label="Alternar tema claro e escuro" title="Alternar tema">
-          <span class="header-icon-button__icon" data-theme-icon="moon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <path d="M18.25 14.5A7.25 7.25 0 0 1 9.5 5.75a7.25 7.25 0 1 0 8.75 8.75Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-            </svg>
+      <div class="app-header__titleblock" aria-hidden="true">
+        <span class="app-header__title">Painel de Contratos</span>
+        <span class="app-header__subtitle">Acompanhamento público dos contratos administrativos</span>
+      </div>
+
+      <div class="header-side">
+        <div class="header-metadata" aria-label="Metadados principais da base publicada">
+          <span class="header-badge header-badge--light" id="badge-base-publicada" data-base-date="2026-04-12">
+            <span class="header-badge__label">Base</span>
+            <strong class="mono">12/04/2026</strong>
           </span>
-          <span class="header-icon-button__icon is-hidden" data-theme-icon="sun" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
-              <path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/>
-            </svg>
+          <span class="header-badge">
+            <span class="header-badge__label">Contratos</span>
+            <strong class="mono" id="contexto-total-contratos">158</strong>
           </span>
-          <span class="sr-only toolbar-button__text--short">Dark Mode</span>
-        </button>
-        <button class="header-icon-button" type="button" id="abrir-atalhos" aria-label="Abrir informações rápidas e atalhos do painel" title="Ajuda e atalhos">
-          <span class="header-icon-button__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false">
-              <path d="M9.25 9.25a2.75 2.75 0 1 1 5.5 0c0 1.5-1.2 2.15-2.2 2.8-.8.5-1.3.95-1.3 1.7v.45" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-              <circle cx="12" cy="18" r="1" fill="currentColor"/>
-              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
-            </svg>
+          <span class="header-badge" id="contexto-valor-total-wrap" title="R$ 195.149.238,67">
+            <span class="header-badge__label">Valor total</span>
+            <strong class="mono" id="contexto-valor-total">R$ 195,1M</strong>
           </span>
-          <span class="sr-only">Ajuda e atalhos</span>
-        </button>
+          <span class="header-badge header-badge--ghost" id="contexto-atualizacao-relativa">Atualizado agora</span>
+          <span class="badge badge--cache is-hidden" id="badge-status-dados"></span>
+        </div>
+
+        <div class="header-actions">
+          <button class="header-icon-button" type="button" id="theme-toggle" aria-pressed="false" aria-label="Alternar tema claro e escuro" title="Alternar tema">
+            <span class="header-icon-button__icon" data-theme-icon="moon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M18.25 14.5A7.25 7.25 0 0 1 9.5 5.75a7.25 7.25 0 1 0 8.75 8.75Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+              </svg>
+            </span>
+            <span class="header-icon-button__icon is-hidden" data-theme-icon="sun" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/>
+              </svg>
+            </span>
+            <span class="sr-only toolbar-button__text--short">Dark Mode</span>
+          </button>
+          <button class="header-icon-button" type="button" id="abrir-atalhos" aria-label="Abrir informações rápidas e atalhos do painel" title="Ajuda e atalhos">
+            <span class="header-icon-button__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M9.25 9.25a2.75 2.75 0 1 1 5.5 0c0 1.5-1.2 2.15-2.2 2.8-.8.5-1.3.95-1.3 1.7v.45" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                <circle cx="12" cy="18" r="1" fill="currentColor"/>
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+            </span>
+            <span class="sr-only">Ajuda e atalhos</span>
+          </button>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="page-main" id="conteudo-principal" aria-label="Conteúdo principal do painel de contratos">
-    <section class="context-strip" aria-label="Contexto resumido da base publicada">
-      <div class="page-shell context-strip__inner">
-        <div class="context-strip__group">
-          <span class="context-strip__item context-strip__item--base" id="badge-base-publicada" data-base-date="2026-04-12">
-            <span>Base:</span>
-            <strong class="mono">12/04/2026</strong>
-          </span>
-          <span class="context-strip__dot" aria-hidden="true">·</span>
-          <span class="context-strip__item"><strong class="mono" id="contexto-total-contratos">158</strong> contratos</span>
-          <span class="context-strip__dot" aria-hidden="true">·</span>
-          <span class="context-strip__item" id="contexto-valor-total-wrap" title="R$ 195.149.238,67">
-            <strong class="mono" id="contexto-valor-total">R$ 195,1M</strong>
-          </span>
-          <span class="badge badge--cache is-hidden" id="badge-status-dados"></span>
-        </div>
-        <div class="context-strip__group context-strip__group--end">
-          <span class="context-strip__item" id="contexto-atualizacao-relativa">Atualizado agora</span>
-        </div>
-      </div>
-    </section>
-
     <div class="page-shell">
       <noscript>
         <div class="noscript-card">
@@ -378,11 +380,11 @@
           <div class="filters-meta">
             <nav class="filter-chips" id="filtros-ativos" aria-label="Filtros ativos" aria-live="polite">
               <span class="filter-chip filter-chip--placeholder is-hidden" id="chip-sem-filtros">Sem filtros ativos</span>
-              <button class="text-button is-hidden" type="button" id="limpar-filtros">Limpar ↺</button>
+              <button class="text-button is-hidden" type="button" id="limpar-filtros">Limpar tudo</button>
             </nav>
             <div class="filters-meta__actions">
               <p class="result-badge" id="badge-resultados" role="status" aria-live="polite" aria-atomic="true">
-                <span class="mono" id="contagem-resultados">158</span> contratos encontrados
+                <span class="mono" id="contagem-resultados">158</span> de 158 contratos
               </p>
               <button class="toolbar-button toolbar-button--ghost filters-export-button" type="button" id="exportar-csv" aria-label="Exportar CSV do recorte atual">
                 Exportar CSV
@@ -434,6 +436,16 @@
             </span>
           </summary>
           <div class="panel-section__body">
+            <div class="results-toolbar" aria-label="Ferramentas da listagem de contratos">
+              <div class="results-toolbar__copy">
+                <p class="results-toolbar__eyebrow">Visualização principal</p>
+                <p class="results-toolbar__description">Abra os detalhes de um contrato pelos cards ou use a tabela compacta para conferência rápida.</p>
+              </div>
+              <div class="view-toggle" id="alternar-visualizacao" role="group" aria-label="Alternar visualização da listagem">
+                <button class="view-toggle__button is-active" type="button" id="visualizacao-cards" data-results-view="cards" aria-pressed="true">Cards</button>
+                <button class="view-toggle__button" type="button" id="visualizacao-tabela" data-results-view="table" aria-pressed="false">Tabela</button>
+              </div>
+            </div>
             <div class="type-groups" id="lista-grupos-tipo" aria-live="polite">
               <div class="empty-state" role="status" aria-live="polite">Carregando contratos do recorte atual.</div>
             </div>
@@ -551,8 +563,7 @@
       </div>
 
       <footer class="app-footer" aria-label="Rodapé institucional do painel">
-        <p><strong>Painel de Contratos v1.0 · Prefeitura de Iguape/SP</strong></p>
-        <p>Dados atualizados em <span class="mono" id="footer-data-atualizacao">12/04/2026 às 06:41</span> · <a href="https://github.com/matheuhenriqu/painel-contratos-iguape" target="_blank" rel="noopener noreferrer">github.com/matheuhenriqu</a></p>
+        <p>Prefeitura Municipal de Iguape/SP · Dados atualizados em <span class="mono" id="footer-data-atualizacao">12/04/2026 às 06:41</span> · v1.2</p>
       </footer>
     </div>
   </main>
@@ -710,6 +721,7 @@
         <span class="modal-feedback" id="modal-feedback" role="status" aria-live="polite"></span>
         <div class="modal-actions">
           <button class="toolbar-button toolbar-button--ghost" type="button" id="modal-copiar-link">Copiar link</button>
+          <button class="toolbar-button toolbar-button--ghost" type="button" id="modal-imprimir">Imprimir</button>
           <button class="toolbar-button toolbar-button--primary" type="button" id="modal-fechar" aria-label="Fechar detalhes do contrato">Fechar</button>
         </div>
       </footer>

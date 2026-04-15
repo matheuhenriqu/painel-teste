@@ -16,6 +16,7 @@ export function createModalController(options) {
       closeButton: null,
       closeTopButton: null,
       copyButton: null,
+      printButton: null,
       feedback: null,
       title: null,
       subtitle: null,
@@ -93,6 +94,10 @@ export function createModalController(options) {
 
     if (config.copyButton) {
       config.copyButton.addEventListener("click", copyLink);
+    }
+
+    if (config.printButton) {
+      config.printButton.addEventListener("click", printDetails);
     }
 
     config.root.addEventListener("cancel", function (event) {
@@ -364,6 +369,13 @@ export function createModalController(options) {
     }
   }
 
+  function printDetails() {
+    window.setTimeout(function () {
+      window.print();
+    }, 40);
+    showFeedback("Abrindo impressão...");
+  }
+
   function showFeedback(message) {
     if (!config.feedback) {
       return;
@@ -527,25 +539,25 @@ function clamp(value, min, max) {
 
 function getModalBadgeLabel(record) {
   if (!record || !record.situacao) {
-    return "Pendente";
+    return "Sem vigência";
   }
 
   switch (record.situacao.key) {
     case "vigente_regular":
-      return "Regular";
+      return "Vigente";
     case "vence_30":
-      return "Urgente";
+      return "Vence em ≤30d";
     case "vence_31_90":
-      return "Atenção";
+      return "Vence 31-90d";
     case "encerrado":
-      return "Vencido";
+      return "Encerrado";
     case "em_andamento":
       return "Em andamento";
     case "nao_assinou":
-      return "Pendente";
+      return "Não assinou";
     case "sem_vigencia":
     default:
-      return "Pendente";
+      return "Sem vigência";
   }
 }
 

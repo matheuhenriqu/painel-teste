@@ -1,4 +1,4 @@
-import {
+﻿import {
   compareText,
   formatCurrency,
   formatDate,
@@ -22,26 +22,26 @@ const tableCurrencyFormatter = new Intl.NumberFormat("pt-BR", {
 });
 
 const TYPE_ICONS = {
-  "PREGÃO ELETRÔNICO": "🛒",
-  "PRORROGAÇÃO": "🕒",
-  "CONCORRÊNCIA ELETRÔNICA": "🏗️",
-  "LOCAÇÃO": "🏠",
-  "CHAMADA PÚBLICA": "📣",
-  "TOMADA DE PREÇOS": "📑",
-  "CONCORRÊNCIA PRESENCIAL": "🏛️",
-  "DISPENSA": "⚖️"
+  "PREGÃO ELETRÔNICO": "PE",
+  "PRORROGAÇÃO": "PR",
+  "CONCORRÊNCIA ELETRÔNICA": "CE",
+  "LOCAÇÃO": "LC",
+  "CHAMADA PÚBLICA": "CH",
+  "TOMADA DE PREÇOS": "TP",
+  "CONCORRÊNCIA PRESENCIAL": "CP",
+  "DISPENSA": "DI"
 };
 
 const TYPE_ACCENTS = {
-  "PREGÃO ELETRÔNICO": "#3B82F6",
-  "PRORROGAÇÃO": "#8B5CF6",
-  "CONCORRÊNCIA ELETRÔNICA": "#06B6D4",
-  "LOCAÇÃO": "#10B981",
-  "CHAMADA PÚBLICA": "#F59E0B",
-  "TOMADA DE PREÇOS": "#EF4444",
-  "CONCORRÊNCIA PRESENCIAL": "#EC4899",
-  "DISPENSA": "#6B7280",
-  "SEM TIPO": "var(--cor-primaria)"
+  "PREGÃO ELETRÔNICO": "var(--chart-type-1)",
+  "PRORROGAÇÃO": "var(--chart-type-2)",
+  "CONCORRÊNCIA ELETRÔNICA": "var(--chart-type-3)",
+  "LOCAÇÃO": "var(--chart-type-4)",
+  "CHAMADA PÚBLICA": "var(--chart-type-5)",
+  "TOMADA DE PREÇOS": "var(--chart-type-6)",
+  "CONCORRÊNCIA PRESENCIAL": "var(--chart-type-7)",
+  "DISPENSA": "var(--chart-type-8)",
+  "SEM TIPO": "var(--color-primary)"
 };
 
 export function createTableRenderer(options) {
@@ -58,7 +58,7 @@ export function createTableRenderer(options) {
     options || {}
   );
 
-  const paginationState = new Map();
+  const visibleCountState = new Map();
   let latestPayload = null;
 
   bindContainer(config.mainContainer, "ativos");
@@ -125,7 +125,7 @@ export function createTableRenderer(options) {
 
   function clear() {
     latestPayload = null;
-    paginationState.clear();
+    visibleCountState.clear();
     [config.mainContainer, config.endedContainer].forEach(function (container) {
       if (container) {
         container.replaceChildren();
@@ -175,9 +175,9 @@ export function createTableRenderer(options) {
         return;
       }
 
-      const pager = event.target.closest("[data-page-action]");
-      if (pager) {
-        handlePageChange(pager, container);
+      const loadMoreButton = event.target.closest("[data-load-more]");
+      if (loadMoreButton) {
+        handleLoadMore(loadMoreButton, container);
         return;
       }
 
@@ -247,27 +247,18 @@ export function createTableRenderer(options) {
     writeCollapsedState(button.dataset.groupToggle || "", nextExpanded);
   }
 
-  function handlePageChange(button, container) {
-    const action = button.dataset.pageAction;
+  function handleLoadMore(button, container) {
     const groupKey = button.dataset.groupKey || "";
-    const totalPages = Number(button.dataset.totalPages || 1);
-    const storageKey = buildPageKey(container, groupKey);
-    const currentPage = paginationState.get(storageKey) || 1;
-    let nextPage = currentPage;
+    const totalItems = Number(button.dataset.totalItems || 0);
+    const storageKey = buildGroupStateKey(container, groupKey);
+    const currentVisible = visibleCountState.get(storageKey) || PAGE_SIZE;
+    const nextVisible = Math.min(totalItems, currentVisible + PAGE_SIZE);
 
-    if (action === "next") {
-      nextPage += 1;
-    }
-    if (action === "prev") {
-      nextPage -= 1;
-    }
-
-    nextPage = Math.max(1, Math.min(totalPages, nextPage));
-    if (nextPage === currentPage) {
+    if (nextVisible === currentVisible) {
       return;
     }
 
-    paginationState.set(storageKey, nextPage);
+    visibleCountState.set(storageKey, nextVisible);
     if (latestPayload) {
       render(latestPayload);
     }
@@ -365,15 +356,15 @@ export function createTableRenderer(options) {
     const expanded = context.expandAll ? true : readCollapsedState(groupStorageKey, context.index === 0);
     const totalValue = sumValues(entry.records);
     const groupId = "grupo-" + context.collectionKey + "-" + typeSlug;
-    const pageKey = buildPageKey(container, groupStorageKey);
-    const totalPages = Math.max(1, Math.ceil(entry.records.length / PAGE_SIZE));
-    const currentPage = clamp(paginationState.get(pageKey) || 1, 1, totalPages);
-    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const groupStateKey = buildGroupStateKey(container, groupStorageKey);
+    const visibleCount = context.disablePagination
+      ? entry.records.length
+      : clamp(visibleCountState.get(groupStateKey) || PAGE_SIZE, PAGE_SIZE, entry.records.length);
     const pageRecords = context.disablePagination
       ? entry.records.slice()
-      : entry.records.slice(pageStart, pageStart + PAGE_SIZE);
+      : entry.records.slice(0, visibleCount);
 
-    paginationState.set(pageKey, currentPage);
+    visibleCountState.set(groupStateKey, visibleCount);
 
     article.className = "contract-group";
     article.dataset.groupId = groupStorageKey;
@@ -392,7 +383,7 @@ export function createTableRenderer(options) {
     const icon = document.createElement("span");
     icon.className = "contract-group__icon";
     icon.setAttribute("aria-hidden", "true");
-    icon.textContent = TYPE_ICONS[entry.tipo] || "📋";
+    icon.textContent = TYPE_ICONS[entry.tipo] || "CT";
 
     const titleWrap = document.createElement("span");
     const title = document.createElement("h3");
@@ -430,14 +421,12 @@ export function createTableRenderer(options) {
     body.appendChild(createDesktopTable(entry.tipo, pageRecords, context.order, context.searchQuery));
     body.appendChild(createMobileCards(pageRecords, context.searchQuery));
 
-    if (!context.disablePagination && entry.records.length > PAGE_SIZE) {
+    if (!context.disablePagination && entry.records.length > visibleCount) {
       body.appendChild(
-        createPagination({
+        createLoadMore({
           groupKey: groupStorageKey,
-          currentPage: currentPage,
-          totalPages: totalPages,
           totalItems: entry.records.length,
-          pageStart: pageStart
+          visibleItems: visibleCount
         })
       );
     }
@@ -629,38 +618,26 @@ export function createTableRenderer(options) {
     return wrap;
   }
 
-  function createPagination(info) {
+  function createLoadMore(info) {
     const wrapper = document.createElement("div");
     wrapper.className = "group-pagination";
 
     const text = document.createElement("p");
     text.className = "group-pagination__info";
-    const from = info.pageStart + 1;
-    const to = Math.min(info.pageStart + PAGE_SIZE, info.totalItems);
-    text.textContent = "Mostrando " + from + "-" + to + " de " + info.totalItems;
+    text.textContent = "Mostrando " + info.visibleItems + " de " + info.totalItems;
 
     const actions = document.createElement("div");
     actions.className = "group-pagination__actions";
 
-    const previous = document.createElement("button");
-    previous.type = "button";
-    previous.className = "group-pagination__button";
-    previous.dataset.pageAction = "prev";
-    previous.dataset.groupKey = info.groupKey;
-    previous.dataset.totalPages = String(info.totalPages);
-    previous.disabled = info.currentPage <= 1;
-    previous.textContent = "← Anterior";
-
     const next = document.createElement("button");
     next.type = "button";
     next.className = "group-pagination__button";
-    next.dataset.pageAction = "next";
+    next.dataset.loadMore = "true";
     next.dataset.groupKey = info.groupKey;
-    next.dataset.totalPages = String(info.totalPages);
-    next.disabled = info.currentPage >= info.totalPages;
-    next.textContent = "Próximo →";
+    next.dataset.totalItems = String(info.totalItems);
+    next.textContent = "Mostrar mais";
 
-    actions.append(previous, next);
+    actions.append(next);
     wrapper.append(text, actions);
     return wrapper;
   }
@@ -890,54 +867,58 @@ function getMobileDueLabel(record) {
       ? "Em andamento"
       : record.situacao && record.situacao.key === "nao_assinou"
         ? "Não assinou"
-        : "Sem data";
+        : "Sem vigência";
   }
 
   if (record.dias_para_vencimento < 0) {
-    return "Vencido há " + Math.abs(record.dias_para_vencimento) + "d";
+    return "Encerrado há " + Math.abs(record.dias_para_vencimento) + "d";
   }
 
   return "Vence em " + record.dias_para_vencimento + " dias";
 }
 
 function getCardToneClass(record) {
-  const tone = getDaysDisplay(record).className;
-  if (tone === "days-chip--urgent") {
-    return "contract-card--urgent";
+  const situation = record && record.situacao ? record.situacao.key : "";
+  switch (situation) {
+    case "vence_30":
+      return "contract-card--urgent";
+    case "vence_31_90":
+      return "contract-card--warning";
+    case "vigente_regular":
+      return "contract-card--regular";
+    case "encerrado":
+      return "contract-card--expired";
+    case "em_andamento":
+      return "contract-card--info";
+    case "nao_assinou":
+      return "contract-card--pending";
+    case "sem_vigencia":
+    default:
+      return "contract-card--muted";
   }
-  if (tone === "days-chip--warning") {
-    return "contract-card--warning";
-  }
-  if (tone === "days-chip--regular") {
-    return "contract-card--regular";
-  }
-  if (tone === "days-chip--expired") {
-    return "contract-card--expired";
-  }
-  return "contract-card--muted";
 }
 
 function getBadgeLabel(record) {
   if (!record || !record.situacao) {
-    return "Pendente";
+    return "Sem vigência";
   }
 
   switch (record.situacao.key) {
     case "vigente_regular":
-      return "Regular";
+      return "Vigente";
     case "vence_30":
-      return "Urgente";
+      return "Vence em ≤30d";
     case "vence_31_90":
-      return "Atenção";
+      return "Vence 31-90d";
     case "encerrado":
-      return "Vencido";
+      return "Encerrado";
     case "em_andamento":
       return "Em andamento";
     case "nao_assinou":
-      return "Pendente";
+      return "Não assinou";
     case "sem_vigencia":
     default:
-      return "Pendente";
+      return "Sem vigência";
   }
 }
 
@@ -1024,7 +1005,7 @@ function formatCount(count) {
   return count + (count === 1 ? " contrato" : " contratos");
 }
 
-function buildPageKey(container, groupKey) {
+function buildGroupStateKey(container, groupKey) {
   return (container ? container.id : "grupo") + "::" + groupKey;
 }
 

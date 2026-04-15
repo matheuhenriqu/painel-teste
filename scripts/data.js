@@ -39,8 +39,8 @@ const STATUS_SPECIAL_LABELS = {
 };
 
 const SITUATION_LABELS = {
-  vigente_regular: "Vigente regular",
-  vence_30: "Vence em 30 dias",
+  vigente_regular: "Vigente",
+  vence_30: "Vence em ≤30d",
   vence_31_90: "Vence em 31-90 dias",
   encerrado: "Encerrado",
   sem_vigencia: "Sem vigência",

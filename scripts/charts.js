@@ -254,10 +254,18 @@ export function renderTimeline(data, container, options) {
   const cautionZone = createSvgElement("rect");
   cautionZone.setAttribute("x", String(padding.left + axisWidth * (30 / 90)));
   cautionZone.setAttribute("y", String(zoneY));
-  cautionZone.setAttribute("width", String(axisWidth * (60 / 90)));
+  cautionZone.setAttribute("width", String(axisWidth * (30 / 90)));
   cautionZone.setAttribute("height", String(zoneHeight));
-  cautionZone.setAttribute("fill", "var(--warning)");
+  cautionZone.setAttribute("fill", "var(--color-accent)");
   cautionZone.setAttribute("class", "timeline-zone");
+
+  const attentionZone = createSvgElement("rect");
+  attentionZone.setAttribute("x", String(padding.left + axisWidth * (60 / 90)));
+  attentionZone.setAttribute("y", String(zoneY));
+  attentionZone.setAttribute("width", String(axisWidth * (30 / 90)));
+  attentionZone.setAttribute("height", String(zoneHeight));
+  attentionZone.setAttribute("fill", "var(--color-warning)");
+  attentionZone.setAttribute("class", "timeline-zone");
 
   const immediateLabel = createSvgElement("text");
   immediateLabel.setAttribute("x", String(padding.left + axisWidth * (15 / 90)));
@@ -267,13 +275,20 @@ export function renderTimeline(data, container, options) {
   immediateLabel.textContent = isCompact ? "0-30d" : "0-30 dias";
 
   const cautionLabel = createSvgElement("text");
-  cautionLabel.setAttribute("x", String(padding.left + axisWidth * (60 / 90)));
+  cautionLabel.setAttribute("x", String(padding.left + axisWidth * (45 / 90)));
   cautionLabel.setAttribute("y", String(laneTop - 10));
   cautionLabel.setAttribute("text-anchor", "middle");
   cautionLabel.setAttribute("class", "timeline-zone-label");
-  cautionLabel.textContent = isCompact ? "31-90d" : "31-90 dias";
+  cautionLabel.textContent = isCompact ? "31-60d" : "31-60 dias";
 
-  svg.append(immediateZone, cautionZone, immediateLabel, cautionLabel);
+  const attentionLabel = createSvgElement("text");
+  attentionLabel.setAttribute("x", String(padding.left + axisWidth * (75 / 90)));
+  attentionLabel.setAttribute("y", String(laneTop - 10));
+  attentionLabel.setAttribute("text-anchor", "middle");
+  attentionLabel.setAttribute("class", "timeline-zone-label");
+  attentionLabel.textContent = isCompact ? "61-90d" : "61-90 dias";
+
+  svg.append(immediateZone, cautionZone, attentionZone, immediateLabel, cautionLabel, attentionLabel);
 
   [0, 30, 60, 90].forEach(function (tick) {
     const x = padding.left + (tick / 90) * axisWidth;
@@ -312,7 +327,7 @@ export function renderTimeline(data, container, options) {
     bubble.setAttribute("cx", String(cx));
     bubble.setAttribute("cy", String(cy));
     bubble.setAttribute("r", "0");
-    bubble.setAttribute("fill", record.dias_para_vencimento <= 30 ? "var(--danger)" : "var(--warning)");
+    bubble.setAttribute("fill", getTimelineBubbleColor(record.dias_para_vencimento));
     bubble.setAttribute("class", "timeline-bubble");
     bubble.dataset.contractId = String(record.id);
     bubble.setAttribute("tabindex", "0");
@@ -798,6 +813,16 @@ function getTypeColor(tipo, element) {
   const style = window.getComputedStyle(element);
   const value = style.getPropertyValue(entry.variable).trim();
   return value || entry.fallback;
+}
+
+function getTimelineBubbleColor(days) {
+  if (days <= 30) {
+    return "var(--color-danger)";
+  }
+  if (days <= 60) {
+    return "var(--color-accent)";
+  }
+  return "var(--color-warning)";
 }
 
 function formatPercent(value) {
