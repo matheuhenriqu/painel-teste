@@ -168,8 +168,9 @@ export function createModalController(options) {
     }
 
     window.requestAnimationFrame(function () {
-      const focusTarget = config.closeTopButton || config.closeButton || config.copyButton;
-      if (focusTarget) {
+      const focusables = getFocusableElements();
+      const focusTarget = focusables[0] || config.closeTopButton || config.closeButton || config.copyButton || config.root;
+      if (focusTarget && typeof focusTarget.focus === "function") {
         focusTarget.focus();
       }
     });

@@ -243,6 +243,7 @@ import { createThemeController } from "./theme.js";
     bindStaticEvents();
     syncMobileViewportMetrics();
     syncFiltersLayoutForViewport();
+    syncFiltersShellMetrics();
     bindCollapsiblePersistence();
     applyResponsiveSectionDefaults();
     initStickyFiltersObserver();
@@ -658,6 +659,7 @@ import { createThemeController } from "./theme.js";
     state.viewportMetricsFrame = window.requestAnimationFrame(function () {
       state.viewportMetricsFrame = 0;
       syncMobileViewportMetrics();
+      syncFiltersShellMetrics();
       updateStickyState();
     });
   }
@@ -686,6 +688,19 @@ import { createThemeController } from "./theme.js";
       rootStyle.setProperty("--mobile-viewport-height", viewportHeight + "px");
     }
     rootStyle.setProperty("--mobile-overlay-offset-bottom", overlayOffsetBottom + "px");
+  }
+
+  function syncFiltersShellMetrics() {
+    if (!DOM.filtersShell) {
+      document.documentElement.style.removeProperty("--filters-shell-height");
+      return;
+    }
+
+    const shellStyle = window.getComputedStyle(DOM.filtersShell);
+    const marginBottom = Number.parseFloat(shellStyle.marginBottom) || 0;
+    const height = Math.max(0, Math.ceil(DOM.filtersShell.getBoundingClientRect().height + marginBottom));
+
+    document.documentElement.style.setProperty("--filters-shell-height", height + "px");
   }
 
   function syncMetadata(dataset) {
@@ -1381,6 +1396,8 @@ import { createThemeController } from "./theme.js";
     if (DOM.filtersGrid.parentElement !== nextParent) {
       nextParent.appendChild(DOM.filtersGrid);
     }
+
+    syncFiltersShellMetrics();
   }
 
   function lockMobileFiltersScroll() {
@@ -1585,6 +1602,7 @@ import { createThemeController } from "./theme.js";
 
     updateResultBadge(records);
     renderChips();
+    syncFiltersShellMetrics();
     renderKpis(records);
     if (!settings.printMode) {
       renderRadar(records);
@@ -2087,6 +2105,9 @@ import { createThemeController } from "./theme.js";
   function setKpiState(card, value) {
     if (card) {
       card.classList.toggle("is-muted", Number(value) === 0);
+      if (card.id === KPI_30_KEY) {
+        card.classList.toggle("kpi-card--alert-active", Number(value) > 0);
+      }
     }
   }
 
@@ -2133,6 +2154,7 @@ import { createThemeController } from "./theme.js";
         }
       }
     });
+    setChartSummary(DOM.radarTimeline, buildTimelineChartSummary(records, urgent));
 
     DOM.radarList.replaceChildren();
 
@@ -2249,6 +2271,9 @@ import { createThemeController } from "./theme.js";
     }
 
     const totals = new Map();
+    const completeCount = records.filter(function (record) {
+      return record.campos_pendentes.length === 0;
+    }).length;
     records.forEach(function (record) {
       const key = record.tipo || "Sem tipo";
       if (!totals.has(key)) {
@@ -2280,19 +2305,23 @@ import { createThemeController } from "./theme.js";
     renderGauge(getCompletenessPercent(records), DOM.gaugeChart, {
       emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
       emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
-      completeCount: records.filter(function (record) {
-        return record.campos_pendentes.length === 0;
-      }).length,
+      completeCount: completeCount,
       totalCount: records.length
     });
+
+    const sortedTotals = Array.from(totals.entries())
+      .sort(function (a, b) {
+        return b[1].quantidade - a[1].quantidade || compareText(a[0], b[0]);
+      });
+
+    setChartSummary(DOM.donutChart, buildDistributionChartSummary(sortedTotals, records.length));
+    setChartSummary(DOM.gaugeChart, buildGaugeChartSummary(completeCount, records.length));
+    setChartSummary(DOM.barsChart, buildYearChartSummary(records));
 
     const tbody = DOM.distribuicaoTable.querySelector("tbody");
     tbody.replaceChildren();
 
-    Array.from(totals.entries())
-      .sort(function (a, b) {
-        return b[1].quantidade - a[1].quantidade || compareText(a[0], b[0]);
-      })
+    sortedTotals
       .forEach(function (entry) {
         const row = document.createElement("tr");
 
@@ -2846,6 +2875,162 @@ import { createThemeController } from "./theme.js";
       DOM.urgentAlerts.textContent = message;
       state.lastUrgentAnnouncement = message;
     }
+  }
+
+  function setChartSummaryLegacy(container, summary) {
+    if (!container) {
+      return;
+    }
+
+    container.setAttribute("role", "group");
+    container.setAttribute("aria-label", summary || "GrÃ¡fico do painel");
+  }
+
+  function buildTimelineChartSummaryLegacy(records, urgent) {
+    if (!records.length) {
+      return "Timeline de vencimentos vazia. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    if (!urgent.length) {
+      return "Timeline de vencimentos vazia. Nenhum contrato vence nos prÃ³ximos 90 dias dentro do recorte atual.";
+    }
+
+    const immediateCount = urgent.filter(function (record) {
+      return record.dias_para_vencimento <= 30;
+    }).length;
+    const watchCount = urgent.length - immediateCount;
+    const highlights = urgent.slice(0, 3).map(function (record) {
+      return getDisplayText(record.contrato || record.id) + " em " + record.dias_para_vencimento + " dias";
+    }).join("; ");
+
+    return "Timeline de vencimentos com " + urgent.length + " contratos nos prÃ³ximos 90 dias. "
+      + immediateCount + " vencem em atÃ© 30 dias e " + watchCount + " entre 31 e 90 dias. "
+      + "Mais prÃ³ximos: " + highlights + ".";
+  }
+
+  function buildDistributionChartSummaryLegacy(sortedTotals, totalRecords) {
+    if (!totalRecords) {
+      return "GrÃ¡fico de distribuiÃ§Ã£o por tipo vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const highlights = (sortedTotals || []).slice(0, 3).map(function (entry) {
+      return entry[1].quantidade + " por " + titleCase(entry[0]);
+    }).join(", ");
+
+    return "GrÃ¡fico de distribuiÃ§Ã£o por tipo com " + totalRecords + " contratos. "
+      + (highlights ? "Destaques: " + highlights + "." : "");
+  }
+
+  function buildGaugeChartSummaryLegacy(completeCount, totalRecords) {
+    if (!totalRecords) {
+      return "Indicador de completude vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const percent = Math.round((completeCount / totalRecords) * 100);
+    return "Indicador de completude cadastral em " + percent + " por cento. "
+      + completeCount + " de " + totalRecords + " contratos estÃ£o sem pendÃªncias.";
+  }
+
+  function buildYearChartSummaryLegacy(records) {
+    if (!records.length) {
+      return "GrÃ¡fico de contratos por ano vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const totalsByYear = new Map();
+    records.forEach(function (record) {
+      const year = record.ano || "Sem ano";
+      totalsByYear.set(year, (totalsByYear.get(year) || 0) + 1);
+    });
+
+    const highlights = Array.from(totalsByYear.entries())
+      .sort(function (a, b) {
+        return Number(b[0]) - Number(a[0]) || compareText(String(a[0]), String(b[0]));
+      })
+      .slice(0, 4)
+      .map(function (entry) {
+        return entry[0] + ": " + entry[1] + " contrato(s)";
+      })
+      .join("; ");
+
+    return "GrÃ¡fico de contratos por ano. " + highlights + ".";
+  }
+
+  function setChartSummary(container, summary) {
+    if (!container) {
+      return;
+    }
+
+    container.setAttribute("role", "group");
+    container.setAttribute("aria-label", summary || "Grafico do painel");
+  }
+
+  function buildTimelineChartSummary(records, urgent) {
+    if (!records.length) {
+      return "Timeline de vencimentos vazia. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    if (!urgent.length) {
+      return "Timeline de vencimentos vazia. Nenhum contrato vence nos proximos 90 dias dentro do recorte atual.";
+    }
+
+    const immediateCount = urgent.filter(function (record) {
+      return record.dias_para_vencimento <= 30;
+    }).length;
+    const watchCount = urgent.length - immediateCount;
+    const highlights = urgent.slice(0, 3).map(function (record) {
+      return getDisplayText(record.contrato || record.id) + " em " + record.dias_para_vencimento + " dias";
+    }).join("; ");
+
+    return "Timeline de vencimentos com " + urgent.length + " contratos nos proximos 90 dias. "
+      + immediateCount + " vencem em ate 30 dias e " + watchCount + " entre 31 e 90 dias. "
+      + "Mais proximos: " + highlights + ".";
+  }
+
+  function buildDistributionChartSummary(sortedTotals, totalRecords) {
+    if (!totalRecords) {
+      return "Grafico de distribuicao por tipo vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const highlights = (sortedTotals || []).slice(0, 3).map(function (entry) {
+      return entry[1].quantidade + " por " + titleCase(entry[0]);
+    }).join(", ");
+
+    return "Grafico de distribuicao por tipo com " + totalRecords + " contratos. "
+      + (highlights ? "Destaques: " + highlights + "." : "");
+  }
+
+  function buildGaugeChartSummary(completeCount, totalRecords) {
+    if (!totalRecords) {
+      return "Indicador de completude vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const percent = Math.round((completeCount / totalRecords) * 100);
+    return "Indicador de completude cadastral em " + percent + " por cento. "
+      + completeCount + " de " + totalRecords + " contratos estao sem pendencias.";
+  }
+
+  function buildYearChartSummary(records) {
+    if (!records.length) {
+      return "Grafico de contratos por ano vazio. Nenhum contrato corresponde aos filtros selecionados.";
+    }
+
+    const totalsByYear = new Map();
+    records.forEach(function (record) {
+      const year = record.ano || "Sem ano";
+      totalsByYear.set(year, (totalsByYear.get(year) || 0) + 1);
+    });
+
+    const highlights = Array.from(totalsByYear.entries())
+      .sort(function (a, b) {
+        return Number(b[0]) - Number(a[0]) || compareText(String(a[0]), String(b[0]));
+      })
+      .slice(0, 4)
+      .map(function (entry) {
+        return entry[0] + ": " + entry[1] + " contrato(s)";
+      })
+      .join("; ");
+
+    return "Grafico de contratos por ano. " + highlights + ".";
   }
 
   function setHighlightedContent(target, text, query) {

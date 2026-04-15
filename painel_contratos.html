@@ -38,6 +38,7 @@
       --sticky-offset: calc(var(--header-height) + env(safe-area-inset-top) + var(--filters-sticky-gap));
       --mobile-viewport-height: 100dvh;
       --mobile-overlay-offset-bottom: 0px;
+      --filters-shell-height: 0px;
       --radius-sm: 12px;
       --radius-md: 18px;
       --radius-lg: 24px;
@@ -172,7 +173,8 @@
     }
 
     :focus-visible {
-      outline: none;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
       box-shadow: var(--focus);
     }
 
@@ -2652,6 +2654,16 @@
       box-shadow: var(--sombra-urgente), var(--sombra-md);
     }
 
+    .kpi-card--danger.kpi-card--alert-active {
+      border-color: color-mix(in srgb, var(--cor-urgente) 24%, var(--borda-sutil));
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 86%, var(--cor-urgente-soft)), var(--bg-card));
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--cor-urgente) 12%, transparent),
+        var(--sombra-urgente),
+        var(--sombra-md);
+    }
+
     .kpi-card--danger:not(.is-muted) .kpi-card__value {
       color: var(--cor-urgente);
     }
@@ -3078,6 +3090,15 @@
       gap: var(--space-2) var(--space-3);
     }
 
+    .filters-meta__actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+
     .filter-chips {
       display: flex;
       flex-wrap: wrap;
@@ -3138,6 +3159,11 @@
       color: var(--texto-secundario);
       font-size: var(--font-sm);
       font-weight: 500;
+    }
+
+    .filters-export-button {
+      min-height: 36px;
+      padding-inline: 0.85rem;
     }
 
     .content-stack {
@@ -3617,6 +3643,16 @@
       text-transform: uppercase;
       letter-spacing: var(--tracking-wide);
       border-bottom: 1px solid var(--borda-sutil);
+    }
+
+    @media (min-width: 768px) {
+      .contracts-table thead th {
+        position: sticky;
+        top: calc(var(--sticky-offset) + var(--filters-shell-height));
+        z-index: 2;
+        background: color-mix(in srgb, var(--bg-card) 96%, var(--bg-pagina));
+        box-shadow: inset 0 -1px 0 var(--borda-sutil);
+      }
     }
 
     .contracts-table td {
@@ -4654,6 +4690,11 @@
         gap: 0.65rem;
       }
 
+      .filters-meta__actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
       .filter-chips {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -4669,6 +4710,10 @@
 
       .text-button {
         align-self: flex-start;
+        min-height: 44px;
+      }
+
+      .filters-export-button {
         min-height: 44px;
       }
 
@@ -5314,9 +5359,14 @@
               <span class="filter-chip filter-chip--placeholder is-hidden" id="chip-sem-filtros">Sem filtros ativos</span>
               <button class="text-button is-hidden" type="button" id="limpar-filtros">Limpar ↺</button>
             </nav>
-            <p class="result-badge" id="badge-resultados" role="status" aria-live="polite" aria-atomic="true">
-              <span class="mono" id="contagem-resultados">158</span> contratos encontrados
-            </p>
+            <div class="filters-meta__actions">
+              <p class="result-badge" id="badge-resultados" role="status" aria-live="polite" aria-atomic="true">
+                <span class="mono" id="contagem-resultados">158</span> contratos encontrados
+              </p>
+              <button class="toolbar-button toolbar-button--ghost filters-export-button" type="button" id="exportar-csv" aria-label="Exportar CSV do recorte atual">
+                Exportar CSV
+              </button>
+            </div>
           </div>
         </div>
       </section>
