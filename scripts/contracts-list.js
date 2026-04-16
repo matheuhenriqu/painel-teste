@@ -2,6 +2,8 @@
   compareText,
   formatCurrency,
   formatDate,
+  formatOptionalCurrency,
+  hasProvidedNumber,
   normalizeText,
   slugify,
   titleCase
@@ -526,10 +528,10 @@ export function createTableRenderer(options) {
     const valueCell = document.createElement("td");
     valueCell.className = "contracts-table__cell contracts-table__cell--value mono";
     valueCell.dataset.label = "Valor";
-    valueCell.textContent = record.valor == null ? "—" : formatTableCurrency(record.valor);
-    valueCell.title = record.valor == null
-      ? "Valor não informado"
-      : "Valor completo: " + formatCurrency(record.valor);
+    valueCell.textContent = formatTableCurrency(record.valor, record.valor_informado);
+    valueCell.title = hasProvidedNumber(record.valor, record.valor_informado)
+      ? "Valor completo: " + formatCurrency(record.valor)
+      : "Valor não informado";
 
     const dueCell = document.createElement("td");
     dueCell.className = "contracts-table__cell contracts-table__cell--vencimento";
@@ -612,10 +614,10 @@ export function createTableRenderer(options) {
 
       const value = document.createElement("span");
       value.className = "contract-card__value mono";
-      value.textContent = record.valor == null ? "—" : formatCurrency(record.valor);
-      value.title = record.valor == null
-        ? "Valor não informado"
-        : "Valor completo: " + formatCurrency(record.valor);
+      value.textContent = formatOptionalCurrency(record.valor, record.valor_informado, "—");
+      value.title = hasProvidedNumber(record.valor, record.valor_informado)
+        ? "Valor completo: " + formatCurrency(record.valor)
+        : "Valor não informado";
 
       const dueInfo = getDaysDisplay(record);
       const due = document.createElement("span");
@@ -984,8 +986,8 @@ function getStatusTooltip(record) {
     (record.vencimento ? " (" + formatDate(record.vencimento) + ")" : "");
 }
 
-function formatTableCurrency(value) {
-  if (value == null || Number.isNaN(Number(value))) {
+function formatTableCurrency(value, wasProvided) {
+  if (!hasProvidedNumber(value, wasProvided)) {
     return "—";
   }
   return tableCurrencyFormatter.format(Number(value));

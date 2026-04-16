@@ -1,5 +1,5 @@
 import {
-  formatCurrency,
+  formatOptionalCurrency,
   formatDate,
   parseIsoDate,
   startOfToday,
@@ -429,7 +429,7 @@ export function createModalController(options) {
     setText(config.ano, record.ano || "Não informado");
     setText(config.empresa, record.empresa || "Não informado");
     setText(config.objeto, record.objeto || "Não informado");
-    setText(config.valor, record.valor == null ? "—" : formatCurrency(record.valor));
+    setText(config.valor, formatOptionalCurrency(record.valor, record.valor_informado, "Não informado"));
     setText(config.gestor, record.gestor || "Não informado");
     setText(config.fiscal, record.fiscal || (record.campos_pendentes.includes("fiscal") ? "Não informado (pendente)" : "Não informado"));
     setText(config.dataInicio, record.data_inicio ? formatDate(record.data_inicio) : "Sem data");

@@ -57,6 +57,20 @@ export function formatCurrency(value) {
   return moneyFormatter.format(Number(value));
 }
 
+export function hasProvidedNumber(value, wasProvided) {
+  if (typeof wasProvided === "boolean") {
+    return wasProvided;
+  }
+
+  return value != null && Number.isFinite(Number(value));
+}
+
+export function formatOptionalCurrency(value, wasProvided, emptyLabel) {
+  return hasProvidedNumber(value, wasProvided)
+    ? formatCurrency(value)
+    : (emptyLabel || "—");
+}
+
 export function parseIsoDate(value) {
   const text = String(value || "").trim();
   if (!text) {

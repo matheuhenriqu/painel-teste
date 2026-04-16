@@ -23,6 +23,8 @@ import {
   compareText,
   formatCurrency,
   formatDateTime,
+  formatOptionalCurrency,
+  hasProvidedNumber,
   normalizeText,
   slugify,
   titleCase
@@ -1867,8 +1869,9 @@ import {
     if (coalesceNumber(a.dias_para_vencimento, Number.POSITIVE_INFINITY) !== coalesceNumber(b.dias_para_vencimento, Number.POSITIVE_INFINITY)) {
       return coalesceNumber(a.dias_para_vencimento, Number.POSITIVE_INFINITY) - coalesceNumber(b.dias_para_vencimento, Number.POSITIVE_INFINITY);
     }
-    if (coalesceNumber(b.valor, -1) !== coalesceNumber(a.valor, -1)) {
-      return coalesceNumber(b.valor, -1) - coalesceNumber(a.valor, -1);
+    const valueComparison = compareValuePresenceThenAmount(a, b, "desc");
+    if (valueComparison !== 0) {
+      return valueComparison;
     }
     return compareText(a.empresa, b.empresa);
   }
@@ -1890,26 +1893,40 @@ import {
   }
 
   function compareByHigherValue(a, b) {
-    if (coalesceNumber(b.valor, -1) !== coalesceNumber(a.valor, -1)) {
-      return coalesceNumber(b.valor, -1) - coalesceNumber(a.valor, -1);
+    const comparison = compareValuePresenceThenAmount(a, b, "desc");
+    if (comparison !== 0) {
+      return comparison;
     }
     return compareText(a.empresa, b.empresa);
   }
 
   function compareByLowerValue(a, b) {
-    if (a.valor == null && b.valor == null) {
-      return compareText(a.empresa, b.empresa);
-    }
-    if (a.valor == null) {
-      return 1;
-    }
-    if (b.valor == null) {
-      return -1;
-    }
-    if (a.valor !== b.valor) {
-      return a.valor - b.valor;
+    const comparison = compareValuePresenceThenAmount(a, b, "asc");
+    if (comparison !== 0) {
+      return comparison;
     }
     return compareText(a.empresa, b.empresa);
+  }
+
+  function compareValuePresenceThenAmount(a, b, direction) {
+    const hasA = hasProvidedNumber(a && a.valor, a && a.valor_informado);
+    const hasB = hasProvidedNumber(b && b.valor, b && b.valor_informado);
+
+    if (hasA !== hasB) {
+      return hasA ? -1 : 1;
+    }
+
+    if (!hasA && !hasB) {
+      return 0;
+    }
+
+    if (a.valor === b.valor) {
+      return 0;
+    }
+
+    return direction === "asc"
+      ? a.valor - b.valor
+      : b.valor - a.valor;
   }
 
   function updateResultBadge(records) {
@@ -2314,6 +2331,9 @@ import {
 
       if (pills[0]) {
         pills[0].textContent = record.valor == null ? "—" : formatCurrency(record.valor);
+      }
+      if (pills[0]) {
+        pills[0].textContent = formatOptionalCurrency(record.valor, record.valor_informado, "—");
       }
       if (pills[1]) {
         pills[1].textContent = titleCase(record.tipo || "Sem tipo");
