@@ -101,6 +101,7 @@ import {
     contextTotalValueWrap: document.getElementById("contexto-valor-total-wrap"),
     contextRelativeUpdate: document.getElementById("contexto-atualizacao-relativa"),
     urgentAlerts: document.getElementById("alertas-urgentes"),
+    accessibilityStatus: document.getElementById("status-acessibilidade"),
     badgeResultados: document.getElementById("badge-resultados"),
     contagemResultados: document.getElementById("contagem-resultados"),
     exportButton: document.getElementById("exportar-csv"),
@@ -237,6 +238,8 @@ import {
     shortcutsController: null,
     themeController: null,
     lastUrgentAnnouncement: "",
+    lastAccessibilityAnnouncement: "",
+    accessibilityAnnouncementTimer: 0,
     visibleSections: new Set(),
     lazyObserver: null,
     stickyObserver: null,
@@ -538,6 +541,10 @@ import {
       DOM.mobileFiltersApply.addEventListener("click", function () {
         toggleMobileFilters(false);
       });
+    }
+
+    if (DOM.mobileFiltersSheet) {
+      DOM.mobileFiltersSheet.addEventListener("keydown", handleMobileFiltersKeydown);
     }
 
     if (DOM.clearFilters) {
@@ -1433,6 +1440,10 @@ import {
     state.resultsViewMode = nextMode;
     writeResultsViewMode(nextMode);
     applyResultsViewMode();
+    announceAccessibilityStatus(
+      "Visualização alterada para " + (nextMode === "table" ? "tabela compacta" : "cards") + ".",
+      { force: true }
+    );
   }
 
   function applyResultsViewMode() {
@@ -1569,6 +1580,7 @@ import {
       DOM.mobileFiltersBackdrop.hidden = false;
       lockMobileFiltersScroll();
       requestViewportMetricsSync();
+      announceAccessibilityStatus("Painel de filtros aberto.", { force: true });
 
       window.requestAnimationFrame(function () {
         if (DOM.mobileFiltersClose) {
@@ -1595,11 +1607,78 @@ import {
       });
     }
 
+    announceAccessibilityStatus("Painel de filtros fechado.", { force: true });
     state.mobileFiltersReturnFocus = null;
   }
 
   function isMobileViewport() {
     return window.matchMedia && window.matchMedia("(max-width: 767.98px)").matches;
+  }
+
+  function handleMobileFiltersKeydown(event) {
+    if (!state.mobileFiltersOpen || !DOM.mobileFiltersSheet) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      toggleMobileFilters(false);
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusables = getFocusableElementsWithin(DOM.mobileFiltersSheet);
+    if (!focusables.length) {
+      event.preventDefault();
+      DOM.mobileFiltersSheet.focus();
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeElement = document.activeElement;
+
+    if (!DOM.mobileFiltersSheet.contains(activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+
+    if (event.shiftKey && activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function getFocusableElementsWithin(root) {
+    if (!root) {
+      return [];
+    }
+
+    return Array.from(
+      root.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(function (element) {
+      return element.offsetParent !== null || element === document.activeElement;
+    });
+  }
+
+  function prefersReducedMotion() {
+    return Boolean(
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+  }
+
+  function getPreferredScrollBehavior() {
+    return prefersReducedMotion() ? "auto" : "smooth";
   }
 
   function syncSearchFieldState() {
@@ -1690,6 +1769,7 @@ import {
       applyResultsViewMode();
     }
     syncSummary(records);
+    announceFiltersAndResults(records);
     syncPrintContext(records);
 
     if (settings.syncUrl) {
@@ -2326,7 +2406,8 @@ import {
 
       setHighlightedContent(company, getDisplayText(record.empresa), state.filters.busca);
       status.className = "status-badge " + record.situacao.badgeClass;
-      status.textContent = record.dias_para_vencimento + " dias";
+      status.textContent = "Vence em " + record.dias_para_vencimento + " dias";
+      status.setAttribute("aria-label", status.textContent);
       setHighlightedContent(object, truncateText(record.objeto || "Não informado", 84), state.filters.busca);
 
       if (pills[0]) {
@@ -2797,10 +2878,53 @@ import {
 
     window.requestAnimationFrame(function () {
       target.scrollIntoView({
-        behavior: "smooth",
+        behavior: getPreferredScrollBehavior(),
         block: "start"
       });
     });
+  }
+
+  function announceFiltersAndResults(records) {
+    if (!state.dataset) {
+      return;
+    }
+
+    const total = state.dataset && state.dataset.metadata
+      ? Number(state.dataset.metadata.total_registros || state.dataset.contratos.length || 0)
+      : records.length;
+    const hasActiveFilters = getActiveFilterCount() > 0;
+    const resultsLabel = records.length === 0
+      ? "Nenhum contrato encontrado."
+      : records.length + " de " + total + " contratos exibidos.";
+    const filtersLabel = hasActiveFilters
+      ? "Filtros ativos: " + getFilterSummary() + "."
+      : "Sem filtros ativos.";
+
+    announceAccessibilityStatus(resultsLabel + " " + filtersLabel);
+  }
+
+  function announceAccessibilityStatus(message, options) {
+    const settings = Object.assign(
+      {
+        force: false
+      },
+      options || {}
+    );
+
+    if (!DOM.accessibilityStatus || !message) {
+      return;
+    }
+
+    if (!settings.force && state.lastAccessibilityAnnouncement === message) {
+      return;
+    }
+
+    state.lastAccessibilityAnnouncement = message;
+    window.clearTimeout(state.accessibilityAnnouncementTimer);
+    DOM.accessibilityStatus.textContent = "";
+    state.accessibilityAnnouncementTimer = window.setTimeout(function () {
+      DOM.accessibilityStatus.textContent = message;
+    }, 40);
   }
 
   function getMostRestrictiveFilterSuggestion() {

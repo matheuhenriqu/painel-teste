@@ -9,6 +9,13 @@ import { getSpecialStatusLabel } from "./data.js";
 
 const CLOSE_ANIMATION_MS = 220;
 
+function prefersReducedMotion() {
+  return Boolean(
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 export function createModalController(options) {
   const config = Object.assign(
     {
@@ -248,7 +255,7 @@ export function createModalController(options) {
 
     state.isClosing = true;
     config.root.classList.add("is-closing");
-    window.setTimeout(finish, CLOSE_ANIMATION_MS);
+    window.setTimeout(finish, prefersReducedMotion() ? 0 : CLOSE_ANIMATION_MS);
   }
 
   function lockPageScroll() {

@@ -17,7 +17,8 @@ export function createShortcutsController(options) {
   );
 
   const state = {
-    scrollFrame: 0
+    scrollFrame: 0,
+    focusBeforeHelp: null
   };
 
   bindEvents();
@@ -36,7 +37,7 @@ export function createShortcutsController(options) {
       config.scrollTopButton.addEventListener("click", function () {
         window.scrollTo({
           top: 0,
-          behavior: "smooth"
+          behavior: prefersReducedMotion() ? "auto" : "smooth"
         });
       });
     }
@@ -62,6 +63,8 @@ export function createShortcutsController(options) {
         event.preventDefault();
         closeHelp();
       });
+
+      config.helpDialog.addEventListener("keydown", handleHelpDialogKeydown);
 
       config.helpDialog.addEventListener("click", function (event) {
         const rect = config.helpDialog.getBoundingClientRect();
@@ -149,6 +152,10 @@ export function createShortcutsController(options) {
       return;
     }
 
+    state.focusBeforeHelp = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : config.helpTrigger;
+
     if (typeof config.helpDialog.showModal === "function" && !config.helpDialog.open) {
       config.helpDialog.showModal();
     } else {
@@ -172,6 +179,12 @@ export function createShortcutsController(options) {
     } else {
       config.helpDialog.removeAttribute("open");
     }
+
+    if (state.focusBeforeHelp && typeof state.focusBeforeHelp.focus === "function") {
+      window.requestAnimationFrame(function () {
+        state.focusBeforeHelp.focus();
+      });
+    }
   }
 
   function updateScrollTopVisibility() {
@@ -192,6 +205,59 @@ export function createShortcutsController(options) {
       updateScrollTopVisibility();
     });
   }
+}
+
+function handleHelpDialogKeydown(event) {
+  const dialog = event.currentTarget;
+  if (!(dialog instanceof HTMLElement) || event.key !== "Tab") {
+    return;
+  }
+
+  const focusables = getFocusableElements(dialog);
+  if (!focusables.length) {
+    event.preventDefault();
+    dialog.focus();
+    return;
+  }
+
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const activeElement = document.activeElement;
+
+  if (!dialog.contains(activeElement)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+    return;
+  }
+
+  if (event.shiftKey && activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function getFocusableElements(root) {
+  if (!root) {
+    return [];
+  }
+
+  return Array.from(
+    root.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  ).filter(function (element) {
+    return element.offsetParent !== null || element === document.activeElement;
+  });
+}
+
+function prefersReducedMotion() {
+  return Boolean(
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
 function isInteractiveContext(target) {

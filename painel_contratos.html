@@ -51,9 +51,9 @@
         </span>
       </a>
 
-      <div class="app-header__titleblock" aria-hidden="true">
-        <span class="app-header__title">Painel de Contratos</span>
-        <span class="app-header__subtitle">Acompanhamento público dos contratos administrativos</span>
+      <div class="app-header__titleblock">
+        <h1 class="app-header__title" id="titulo-painel">Painel de Contratos</h1>
+        <p class="app-header__subtitle">Acompanhamento público dos contratos administrativos</p>
       </div>
 
       <div class="header-metadata" aria-label="Metadados principais da base publicada">
@@ -113,6 +113,11 @@
       <div class="load-banner is-hidden" id="mensagem-carga" role="status" aria-live="polite"></div>
       <div class="sr-only" id="alertas-urgentes" aria-live="assertive" aria-atomic="true"></div>
       <p class="sr-only" id="ajuda-busca">Busca em contrato, processo, empresa, objeto, gestor e fiscal. Pressione Escape para limpar o campo de busca.</p>
+      <aside class="sr-only" id="apoio-acessibilidade" aria-labelledby="titulo-apoio-acessibilidade">
+        <h2 id="titulo-apoio-acessibilidade">Apoio de acessibilidade do painel</h2>
+        <p id="ajuda-navegacao-painel">Use Tab para navegar pelos filtros, indicadores, gráficos e contratos. Pressione Enter ou barra de espaço para ativar cards, botões e elementos interativos.</p>
+        <p id="status-acessibilidade" role="status" aria-live="polite" aria-atomic="true"></p>
+      </aside>
 
       <section class="print-summary" id="resumo-impressao" aria-hidden="true">
         <h2>Resumo do recorte para impressão</h2>
@@ -138,7 +143,7 @@
       </section>
 
       <section class="kpi-section" aria-labelledby="titulo-resumo-executivo" aria-label="Resumo executivo do painel">
-        <h1 class="sr-only" id="titulo-resumo-executivo">Painel de contratos da Prefeitura de Iguape</h1>
+        <h2 class="sr-only" id="titulo-resumo-executivo">Resumo executivo do painel</h2>
         <div class="kpi-grid" id="grade-kpis" aria-label="Indicadores principais do painel">
           <button class="kpi-card kpi-card--primary" type="button" role="button" id="kpi-total-contratos" data-filter-key="situacao" data-filter-value="todos" style="--card-fill: 100%;" aria-label="Mostrar todos os contratos do recorte atual">
             <div class="kpi-card__eyebrow">
@@ -376,7 +381,7 @@
           </form>
 
           <div class="filters-meta">
-            <nav class="filter-chips" id="filtros-ativos" aria-label="Filtros ativos" aria-live="polite">
+            <nav class="filter-chips" id="filtros-ativos" aria-label="Filtros ativos" aria-live="polite" aria-atomic="true" aria-relevant="additions removals text">
               <span class="filter-chip filter-chip--placeholder is-hidden" id="chip-sem-filtros">Sem filtros ativos</span>
               <button class="text-button is-hidden" type="button" id="limpar-filtros">Limpar tudo</button>
             </nav>
@@ -429,12 +434,12 @@
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill" id="contador-listagem-principal">0</span>
+              <span class="pill" id="contador-listagem-principal" role="status" aria-live="polite" aria-atomic="true">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
           <div class="panel-section__body">
-            <div class="results-toolbar" aria-label="Ferramentas da listagem de contratos">
+            <div class="results-toolbar" role="toolbar" aria-label="Ferramentas da listagem de contratos">
               <div class="results-toolbar__copy">
                 <p class="results-toolbar__eyebrow">Visualização principal</p>
                 <p class="results-toolbar__description">Abra os detalhes de um contrato pelos cards ou use a tabela compacta para conferência rápida.</p>
@@ -459,7 +464,7 @@
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill" id="contador-distribuicao-tipos">0</span>
+              <span class="pill" id="contador-distribuicao-tipos" role="status" aria-live="polite" aria-atomic="true">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
@@ -530,7 +535,7 @@
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill" id="contador-pendencias">0</span>
+              <span class="pill" id="contador-pendencias" role="status" aria-live="polite" aria-atomic="true">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
@@ -548,7 +553,7 @@
               </span>
             </span>
             <span class="panel-section__summary-side">
-              <span class="pill mono" id="contador-encerrados">0</span>
+              <span class="pill mono" id="contador-encerrados" role="status" aria-live="polite" aria-atomic="true">0</span>
               <span class="chevron" aria-hidden="true"></span>
             </span>
           </summary>
@@ -568,7 +573,7 @@
 
   <div class="filters-overlays" id="filtros-overlays" aria-hidden="true">
     <div class="filters-sheet-backdrop" id="filtros-mobile-backdrop" hidden></div>
-    <div class="filters-sheet" id="filtros-mobile-sheet" aria-labelledby="titulo-filtros-mobile" aria-modal="true" role="dialog" aria-hidden="true">
+    <div class="filters-sheet" id="filtros-mobile-sheet" aria-labelledby="titulo-filtros-mobile" aria-describedby="ajuda-navegacao-painel" aria-modal="true" role="dialog" aria-hidden="true" tabindex="-1">
       <div class="filters-sheet__header">
         <div>
           <h2 id="titulo-filtros-mobile">Filtros do painel</h2>
@@ -593,7 +598,7 @@
     <span class="print-footer__page">Página </span>
   </div>
 
-  <dialog class="contract-modal" id="modal-contrato" aria-labelledby="modal-titulo" aria-modal="true" role="dialog">
+  <dialog class="contract-modal" id="modal-contrato" aria-labelledby="modal-titulo" aria-describedby="modal-subtitulo" aria-modal="true" role="dialog">
     <div class="modal-shell">
       <header class="modal-header">
         <div class="modal-header__row">
@@ -775,6 +780,7 @@
       <div class="type-group__body">
         <div class="table-wrap">
           <table class="table contracts-table">
+            <caption class="sr-only">Contratos do tipo selecionado no recorte atual</caption>
             <thead>
               <tr>
                 <th scope="col">Contrato</th>
@@ -803,12 +809,13 @@
     </tr>
   </template>
 
-  <dialog class="shortcut-dialog" id="atalhos-overlay" aria-labelledby="atalhos-titulo" aria-modal="true" role="dialog">
+  <dialog class="shortcut-dialog" id="atalhos-overlay" aria-labelledby="atalhos-titulo" aria-describedby="atalhos-descricao" aria-modal="true" role="dialog">
     <div class="shortcut-dialog__shell">
       <div class="shortcut-dialog__header">
         <div>
           <p class="section-eyebrow">Acesso rápido</p>
           <h2 id="atalhos-titulo">Atalhos do painel</h2>
+          <p class="sr-only" id="atalhos-descricao">Janela com atalhos de teclado e ações rápidas do painel.</p>
         </div>
         <button class="modal-close-button" type="button" id="atalhos-fechar" aria-label="Fechar lista de atalhos">✕</button>
       </div>

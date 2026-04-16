@@ -12,7 +12,7 @@
   --color-bg: #f8f9fa;
   --color-surface: #ffffff;
   --color-text: #2c3e50;
-  --color-text-muted: #7f8c8d;
+  --color-text-muted: #5f6f7c;
 
   --color-primary-soft: rgba(26, 82, 118, 0.12);
   --color-accent-soft: rgba(230, 126, 34, 0.14);
@@ -94,7 +94,7 @@
   --bg-soft: #eef3f7;
   --bg-elevated: rgba(255, 255, 255, 0.9);
   --text: var(--color-text);
-  --text-muted: #526272;
+  --text-muted: #485867;
   --text-soft: var(--color-text-muted);
   --border: var(--color-border);
   --border-strong: var(--color-border-strong);
@@ -126,7 +126,7 @@
   --bg-filtros: rgba(255, 255, 255, 0.94);
   --bg-modal-overlay: rgba(10, 17, 28, 0.68);
   --texto-primario: var(--color-text);
-  --texto-secundario: #4d5d6d;
+  --texto-secundario: #435565;
   --texto-terciario: var(--color-text-muted);
   --texto-sobre-primaria: #f8fbff;
   --texto-link: var(--color-primary);

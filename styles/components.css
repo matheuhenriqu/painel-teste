@@ -5232,3 +5232,40 @@ html[data-theme="dark"] {
   }
 }
 
+.chart-arc:focus-visible,
+.timeline-bubble:focus-visible,
+.chart-bar-segment:focus-visible {
+  opacity: 1;
+  filter: brightness(1.08) drop-shadow(0 0 0 3px rgba(var(--cor-primaria-rgb), 0.42));
+}
+
+.chart-legend__button:focus-visible,
+.panel-section__summary:focus-visible,
+.urgent-card:focus-visible,
+.pending-item:focus-visible,
+.filter-chip:focus-visible,
+.filters-mobile-toggle:focus-visible,
+.view-toggle__button:focus-visible,
+.modal-close-button:focus-visible {
+  outline: 2px solid var(--cor-primaria);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-arc,
+  .timeline-bubble,
+  .chart-bar-segment,
+  .chart-legend__button,
+  .contract-card,
+  .toolbar-button,
+  .text-button,
+  .panel-section__summary,
+  .filters-mobile-toggle,
+  .view-toggle__button,
+  .modal-close-button,
+  .scroll-progress__bar {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

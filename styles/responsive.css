@@ -197,6 +197,11 @@ body * {
   font-size: clamp(1.05rem, 1.2vw, 1.35rem);
   font-weight: 800;
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.app-header__subtitle {
+  margin: 0;
 }
 
 .header-metadata,

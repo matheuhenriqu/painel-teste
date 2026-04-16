@@ -23,6 +23,13 @@ const tableCurrencyFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 0
 });
 
+function prefersReducedMotion() {
+  return Boolean(
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 const TYPE_ICONS = {
   "PREGÃO ELETRÔNICO": "PE",
   "PRORROGAÇÃO": "PR",
@@ -270,7 +277,7 @@ export function createTableRenderer(options) {
     if (scrollTarget) {
       window.requestAnimationFrame(function () {
         scrollTarget.scrollIntoView({
-          behavior: "smooth",
+          behavior: prefersReducedMotion() ? "auto" : "smooth",
           block: "start"
         });
       });
