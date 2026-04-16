@@ -175,7 +175,9 @@ export function renderLoadMessage(container, options) {
       title: "",
       message: "",
       actionLabel: "",
-      actionId: ""
+      actionId: "",
+      linkLabel: "",
+      linkHref: ""
     },
     options || {}
   );
@@ -202,14 +204,33 @@ export function renderLoadMessage(container, options) {
   content.append(title, message);
   container.appendChild(content);
 
-  if (config.actionLabel) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "toolbar-button";
-    button.id = config.actionId || "";
-    button.textContent = config.actionLabel;
-    container.appendChild(button);
-    return button;
+  if (config.actionLabel || (config.linkLabel && config.linkHref)) {
+    const actions = document.createElement("div");
+    actions.className = "empty-state__actions";
+
+    if (config.linkLabel && config.linkHref) {
+      const link = document.createElement("a");
+      link.className = "toolbar-button toolbar-button--ghost";
+      link.href = config.linkHref;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = config.linkLabel;
+      actions.appendChild(link);
+    }
+
+    if (config.actionLabel) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "toolbar-button";
+      button.id = config.actionId || "";
+      button.textContent = config.actionLabel;
+      actions.appendChild(button);
+      container.appendChild(actions);
+      return button;
+    }
+
+    container.appendChild(actions);
+    return null;
   }
 
   return null;
@@ -262,6 +283,15 @@ function normalizeStatusKey(value) {
   return normalizeText(value).replace(/-/g, "_");
 }
 
+function createDataError(code, message, cause) {
+  const error = new Error(message);
+  error.code = code;
+  if (cause) {
+    error.cause = cause;
+  }
+  return error;
+}
+
 function toFiniteNumber(value) {
   if (value == null || value === "") {
     return null;
@@ -281,6 +311,54 @@ function toNullableYear(value) {
   return Number.isInteger(numeric) ? numeric : null;
 }
 
+function formatIsoDate(value) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    return null;
+  }
+
+  return [
+    value.getFullYear(),
+    String(value.getMonth() + 1).padStart(2, "0"),
+    String(value.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function extractYearFromContrato(value) {
+  const matches = String(value || "").match(/\b(19|20)\d{2}\b/g);
+  if (!matches || !matches.length) {
+    return null;
+  }
+
+  const lastMatch = Number(matches[matches.length - 1]);
+  return Number.isInteger(lastMatch) ? lastMatch : null;
+}
+
+function calcDaysToExpiry(value, referenceDate) {
+  const dueDate = value instanceof Date ? value : parseIsoDate(value);
+  if (!dueDate) {
+    return null;
+  }
+
+  const today = startOfToday(referenceDate);
+  return Math.ceil((dueDate.getTime() - today.getTime()) / 86400000);
+}
+
+function derivePublicStatus(diasParaVencimento, dueDate) {
+  if (!dueDate) {
+    return "Sem vigência";
+  }
+  if (diasParaVencimento < 0) {
+    return "Encerrado";
+  }
+  if (diasParaVencimento <= 30) {
+    return "Vence em ≤30d";
+  }
+  if (diasParaVencimento <= 90) {
+    return "Vence 31-90d";
+  }
+  return "Vigente";
+}
+
 function buildPendingFields(record) {
   const pending = [];
 
@@ -297,11 +375,13 @@ function buildPendingFields(record) {
 
 function getSearchableText(record) {
   return normalizeText([
+    record.id,
     record.contrato,
     record.empresa,
     record.objeto,
     record.processo,
-    record.gestor
+    record.gestor,
+    record.fiscal
   ].join(" "));
 }
 
@@ -343,47 +423,82 @@ function deriveSituation(record, referenceDate) {
 }
 
 function sanitizeContract(item, index, referenceDate) {
+  const rawItem = item && typeof item === "object" ? item : {};
+  const dataInicioDate = parseIsoDate(rawItem.data_inicio);
+  const vencimentoDate = parseIsoDate(rawItem.vencimento);
+  const rawValue = toFiniteNumber(rawItem.valor);
   const record = {
-    id: Number.isInteger(Number(item.id)) ? Number(item.id) : index + 1,
-    tipo: toNullableText(item.tipo),
-    modalidade: toNullableText(item.modalidade),
-    objeto: toNullableText(item.objeto),
-    processo: toNullableText(item.processo),
-    contrato: toNullableText(item.contrato),
-    valor: toFiniteNumber(item.valor),
-    empresa: toNullableText(item.empresa),
-    data_inicio: parseIsoDate(item.data_inicio) ? String(item.data_inicio) : null,
-    vencimento: parseIsoDate(item.vencimento) ? String(item.vencimento) : null,
-    observacoes: toNullableText(item.observacoes),
-    gestor: toNullableText(item.gestor),
-    fiscal: toNullableText(item.fiscal),
-    status_especial: toNullableText(item.status_especial),
-    ano: toNullableYear(item.ano),
-    area_referencia: toNullableText(item.area_referencia)
+    id: Number.isInteger(Number(rawItem.id)) ? Number(rawItem.id) : index + 1,
+    tipo: toNullableText(rawItem.tipo),
+    modalidade: toNullableText(rawItem.modalidade),
+    objeto: toNullableText(rawItem.objeto),
+    processo: toNullableText(rawItem.processo),
+    contrato: toNullableText(rawItem.contrato),
+    valor: rawValue,
+    empresa: toNullableText(rawItem.empresa),
+    data_inicio: dataInicioDate ? formatIsoDate(dataInicioDate) : null,
+    vencimento: vencimentoDate ? formatIsoDate(vencimentoDate) : null,
+    observacoes: toNullableText(rawItem.observacoes),
+    gestor: toNullableText(rawItem.gestor),
+    fiscal: toNullableText(rawItem.fiscal),
+    status_especial: toNullableText(rawItem.status_especial),
+    ano: toNullableYear(rawItem.ano) || extractYearFromContrato(rawItem.contrato),
+    area_referencia: toNullableText(rawItem.area_referencia)
   };
 
-  const pending = Array.isArray(item.campos_pendentes)
-    ? item.campos_pendentes.filter(Boolean)
+  const pending = Array.isArray(rawItem.campos_pendentes)
+    ? rawItem.campos_pendentes
+      .map(function (field) {
+        return String(field == null ? "" : field).trim();
+      })
+      .filter(Boolean)
     : buildPendingFields(record);
 
   const situation = deriveSituation(record, referenceDate);
+  const diasParaVencimento = calcDaysToExpiry(vencimentoDate, referenceDate);
+  const cleanedRecord = {
+    id: record.id || 0,
+    tipo: record.tipo ? record.tipo.toUpperCase() : "NÃO INFORMADO",
+    modalidade: record.modalidade || "",
+    objeto: record.objeto || "Objeto não informado",
+    processo: record.processo || "",
+    contrato: record.contrato || "",
+    valor: rawValue == null ? 0 : rawValue,
+    valor_informado: rawValue != null,
+    empresa: record.empresa || "Empresa não informada",
+    data_inicio: record.data_inicio,
+    vencimento: record.vencimento,
+    observacoes: record.observacoes || "",
+    gestor: record.gestor || "",
+    fiscal: record.fiscal || "",
+    status_especial: record.status_especial || "",
+    ano: record.ano,
+    area_referencia: record.area_referencia || "",
+    campos_pendentes: pending,
+    dataInicio: dataInicioDate,
+    vencimentoDate: vencimentoDate,
+    diasParaVencimento: diasParaVencimento,
+    status: derivePublicStatus(diasParaVencimento, vencimentoDate),
+    isUrgente: diasParaVencimento != null && diasParaVencimento >= 0 && diasParaVencimento <= 30,
+    isEncerrado: diasParaVencimento != null && diasParaVencimento < 0
+  };
   const normalized = {
-    tipo: slugify(record.tipo),
-    gestor: slugify(record.gestor),
-    ano: record.ano ? String(record.ano) : "",
+    tipo: slugify(cleanedRecord.tipo),
+    gestor: slugify(cleanedRecord.gestor),
+    ano: cleanedRecord.ano ? String(cleanedRecord.ano) : "",
     situacao: situation.key
   };
 
-  const cleanedRecord = Object.assign({}, record, {
+  Object.assign(cleanedRecord, {
     campos_pendentes: pending,
-    dias_para_vencimento: situation.diasParaVencimento,
+    dias_para_vencimento: diasParaVencimento,
     situacao: situation,
-    search_blob: getSearchableText(record),
+    search_blob: getSearchableText(cleanedRecord),
     normalized: normalized
   });
 
   const hasRequiredGaps = REQUIRED_FIELDS.some(function (field) {
-    return cleanedRecord[field] == null || cleanedRecord[field] === "";
+    return record[field] == null || record[field] === "";
   });
 
   if (hasRequiredGaps || pending.length) {
@@ -501,6 +616,53 @@ function validatePayloadShape(payload) {
   }
 }
 
+function normalizePayloadShape(payload) {
+  if (Array.isArray(payload)) {
+    return {
+      metadata: {},
+      contratos: payload
+    };
+  }
+
+  try {
+    validatePayloadShape(payload);
+  } catch (error) {
+    const contracts = payload && typeof payload === "object"
+      ? (
+        Array.isArray(payload.contratos)
+          ? payload.contratos
+          : Array.isArray(payload.registros)
+          ? payload.registros
+          : Array.isArray(payload.data)
+            ? payload.data
+            : null
+      )
+      : null;
+
+    if (!contracts) {
+      throw createDataError(
+        "data_parse_failed",
+        "Erro ao processar dados. A estrutura de contratos.json não pôde ser reconhecida.",
+        error
+      );
+    }
+
+    return {
+      metadata: payload.metadata && typeof payload.metadata === "object"
+        ? payload.metadata
+        : {},
+      contratos: contracts
+    };
+  }
+
+  return {
+    metadata: payload.metadata && typeof payload.metadata === "object"
+      ? payload.metadata
+      : {},
+    contratos: payload.contratos
+  };
+}
+
 function normalizeMetadata(metadata, total) {
   const generatedAt = toNullableText(metadata.gerado_em);
   return {
@@ -516,16 +678,16 @@ function normalizeMetadata(metadata, total) {
 }
 
 function parseDataset(payload, referenceDate) {
-  validatePayloadShape(payload);
+  const normalizedPayload = normalizePayloadShape(payload);
 
-  const contracts = payload.contratos.map(function (item, index) {
+  const contracts = normalizedPayload.contratos.map(function (item, index) {
     return normalizeContract(item, {
       index: index,
       referenceDate: referenceDate
     });
   });
 
-  const metadata = normalizeMetadata(payload.metadata, contracts.length);
+  const metadata = normalizeMetadata(normalizedPayload.metadata, contracts.length);
   const indices = buildIndices(contracts);
   const lookups = buildLookups(contracts, metadata);
 
@@ -592,13 +754,27 @@ async function fetchJsonWithTimeout(url, timeoutMs) {
     });
 
     if (!response.ok) {
-      throw new Error("HTTP " + response.status + " ao carregar contratos.json.");
+      throw createDataError(
+        "fetch_failed",
+        "HTTP " + response.status + " ao carregar contratos.json."
+      );
     }
 
-    return await response.json();
+    try {
+      return await response.json();
+    } catch (error) {
+      throw createDataError(
+        "json_parse_failed",
+        "Erro ao processar dados. O arquivo contratos.json contém JSON inválido.",
+        error
+      );
+    }
   } catch (error) {
     if (error && error.name === "AbortError") {
-      throw new Error("Tempo limite excedido ao carregar contratos.json.");
+      throw createDataError(
+        "fetch_failed",
+        "Tempo limite excedido ao carregar contratos.json."
+      );
     }
     throw error;
   } finally {

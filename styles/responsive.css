@@ -806,6 +806,10 @@ body * {
 }
 
 .contract-card--urgent { --card-accent: var(--color-danger); }
+.contract-card--critical {
+  box-shadow: 0 14px 32px rgba(192, 57, 43, 0.12);
+  background: linear-gradient(180deg, rgba(192, 57, 43, 0.06), var(--color-surface));
+}
 .contract-card--warning { --card-accent: var(--color-accent); }
 .contract-card--regular { --card-accent: var(--color-success); }
 .contract-card--expired { --card-accent: #95a5a6; }
@@ -887,6 +891,14 @@ body * {
   background: rgba(41, 128, 185, 0.06);
 }
 
+.contracts-table tr.contracts-table__row--risk td {
+  background-image: linear-gradient(90deg, rgba(192, 57, 43, 0.08), transparent 18%);
+}
+
+.contracts-table tr.contracts-table__row--critical td {
+  background-image: linear-gradient(90deg, rgba(192, 57, 43, 0.14), transparent 22%);
+}
+
 .days-chip,
 .status-badge,
 .pending-badge {
@@ -909,7 +921,8 @@ body * {
 .days-chip--muted { background: rgba(122, 77, 216, 0.12); color: var(--cor-especial); }
 
 .status-badge--vigente { background: var(--color-success-soft); color: var(--color-success); border-color: rgba(39, 174, 96, 0.18); }
-.status-badge--urgente { background: var(--color-danger-soft); color: var(--color-danger); border-color: rgba(192, 57, 43, 0.22); animation: badgePulse 2.2s ease-in-out infinite; }
+.status-badge--urgente { background: var(--color-danger-soft); color: var(--color-danger); border-color: rgba(192, 57, 43, 0.22); }
+.status-badge--critical { animation: badgePulse 2.2s ease-in-out infinite; }
 .status-badge--atencao { background: var(--color-accent-soft); color: var(--color-accent); border-color: rgba(230, 126, 34, 0.22); }
 .status-badge--encerrado { background: rgba(149, 165, 166, 0.16); color: #7b8794; border-color: rgba(149, 165, 166, 0.22); }
 .status-badge--sem-vigencia { background: rgba(122, 77, 216, 0.14); color: var(--cor-especial); border-color: rgba(122, 77, 216, 0.18); }
@@ -1207,6 +1220,12 @@ html[data-theme="dark"] .chart-tooltip { background: rgba(22, 33, 62, 0.98); }
 
   50% {
     box-shadow: 0 0 0 8px rgba(192, 57, 43, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-badge--critical {
+    animation: none;
   }
 }
 

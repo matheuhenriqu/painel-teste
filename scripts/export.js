@@ -1,10 +1,28 @@
 import {
-  formatCurrency,
   formatDate,
-  formatDateTime,
-  slugify
+  formatDateTime
 } from "./utils.js";
 import { setBusyButtonState } from "./loading.js";
+
+const CSV_COLUMNS = [
+  { key: "id", label: "id" },
+  { key: "tipo", label: "tipo" },
+  { key: "modalidade", label: "modalidade" },
+  { key: "objeto", label: "objeto" },
+  { key: "processo", label: "processo" },
+  { key: "contrato", label: "contrato" },
+  { key: "valor", label: "valor" },
+  { key: "empresa", label: "empresa" },
+  { key: "data_inicio", label: "data_inicio" },
+  { key: "vencimento", label: "vencimento" },
+  { key: "observacoes", label: "observacoes" },
+  { key: "gestor", label: "gestor" },
+  { key: "fiscal", label: "fiscal" },
+  { key: "status_especial", label: "status_especial" },
+  { key: "ano", label: "ano" },
+  { key: "area_referencia", label: "area_referencia" },
+  { key: "campos_pendentes", label: "campos_pendentes" }
+];
 
 export function createExportController(options) {
   const config = Object.assign(
@@ -80,47 +98,17 @@ export function createExportController(options) {
       await nextFrame();
 
       const exportedAt = new Date();
-      const fileName = buildFilename(exportedAt, config.getFilters());
+      const fileName = buildFilename(exportedAt);
       const lines = [
-        "# Painel de Contratos - Prefeitura de Iguape/SP",
-        "# Exportado em: " + formatTimestamp(exportedAt),
-        "# Filtros: " + config.getFilterSummary(),
-        "# Total de registros: " + records.length,
-        [
-          "Contrato",
-          "Tipo",
-          "Modalidade",
-          "Objeto",
-          "Processo",
-          "Valor",
-          "Empresa",
-          "Data Início",
-          "Vencimento",
-          "Dias Restantes",
-          "Situação",
-          "Gestor",
-          "Fiscal",
-          "Observações"
-        ].join(";")
+        CSV_COLUMNS.map(function (column) {
+          return column.label;
+        }).join(";")
       ];
 
       records.forEach(function (record) {
-        lines.push([
-          record.contrato || "",
-          record.tipo || "",
-          record.modalidade || "",
-          record.objeto || "",
-          record.processo || "",
-          record.valor == null ? "" : formatCurrency(record.valor),
-          record.empresa || "",
-          record.data_inicio ? formatDate(record.data_inicio) : "",
-          record.vencimento ? formatDate(record.vencimento) : "",
-          record.dias_para_vencimento == null ? "" : String(record.dias_para_vencimento),
-          record.situacao ? record.situacao.label : "",
-          record.gestor || "",
-          record.fiscal || "",
-          buildObservationText(record)
-        ].map(escapeCsv).join(";"));
+        lines.push(CSV_COLUMNS.map(function (column) {
+          return escapeCsv(resolveCsvCell(record, column.key));
+        }).join(";"));
       });
 
       const blob = new Blob(["\uFEFF" + lines.join("\n")], {
@@ -134,7 +122,7 @@ export function createExportController(options) {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      showToast("CSV exportado com sucesso.");
+      showToast("✓ CSV exportado com " + records.length + " contratos");
       return true;
     } finally {
       setBusyButtonState(config.exportButton, false);
@@ -162,7 +150,7 @@ export function createExportController(options) {
 
     try {
       await navigator.clipboard.writeText(url);
-      showToast("Link copiado para a área de transferência.");
+      showToast("✓ Link copiado");
       return true;
     } catch (error) {
       showToast("Não foi possível copiar o link.");
@@ -181,45 +169,17 @@ export function createExportController(options) {
     state.toastTimer = window.setTimeout(function () {
       config.toast.classList.remove("is-visible");
       config.toast.textContent = "";
-    }, 2000);
+    }, 3000);
   }
 }
 
-function buildFilename(date, filters) {
+function buildFilename(date) {
   const isoDate = [
     date.getFullYear(),
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0")
   ].join("-");
-  const filterToken = resolveFilenameToken(filters);
-  return "contratos_iguape_" + isoDate + "_" + filterToken + ".csv";
-}
-
-function resolveFilenameToken(filters) {
-  if (filters && filters.situacao) {
-    return slugify(filters.situacao) || "recorte";
-  }
-  if (filters && filters.tipo) {
-    return slugify(filters.tipo) || "recorte";
-  }
-  if (filters && filters.ano) {
-    return "ano-" + slugify(filters.ano);
-  }
-  if (filters && filters.busca) {
-    return "busca";
-  }
-  return "recorte";
-}
-
-function buildObservationText(record) {
-  const items = [];
-  if (record.observacoes) {
-    items.push(record.observacoes);
-  }
-  if (record.campos_pendentes && record.campos_pendentes.length) {
-    items.push("Pendências: " + record.campos_pendentes.join(", "));
-  }
-  return items.join(" | ");
+  return "contratos-iguape-" + isoDate + ".csv";
 }
 
 function escapeCsv(value) {
@@ -229,6 +189,36 @@ function escapeCsv(value) {
 
 function formatTimestamp(value) {
   return formatDateTime(value).replace(",", "");
+}
+
+function resolveCsvCell(record, key) {
+  switch (key) {
+    case "valor":
+      return formatRawNumber(record.valor, record.valor_informado);
+    case "data_inicio":
+      return record.data_inicio ? formatDate(record.data_inicio) : "";
+    case "vencimento":
+      return record.vencimento ? formatDate(record.vencimento) : "";
+    case "campos_pendentes":
+      return Array.isArray(record.campos_pendentes)
+        ? record.campos_pendentes.join(", ")
+        : "";
+    default:
+      return record[key] == null ? "" : record[key];
+  }
+}
+
+function formatRawNumber(value, wasProvided) {
+  if (!wasProvided && (value == null || Number(value) === 0)) {
+    return "";
+  }
+
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return "";
+  }
+
+  return String(numeric);
 }
 
 function nextFrame() {

@@ -97,7 +97,7 @@ export function createTableRenderer(options) {
       order: settings.order,
       searchQuery: settings.searchQuery,
       emptySuggestion: settings.emptySuggestion,
-      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyTitle: "Nenhum contrato encontrado com esses filtros.",
       emptyText: "Ajuste os filtros aplicados ou limpe todos para voltar a exibir a listagem."
     });
 
@@ -492,9 +492,16 @@ export function createTableRenderer(options) {
     const row = document.createElement("tr");
     row.dataset.clickable = "true";
     row.dataset.contractId = String(record.id);
+    row.dataset.riskLevel = isCriticalUrgency(record) ? "critical" : record && record.situacao ? record.situacao.key : "";
     row.tabIndex = 0;
     row.setAttribute("role", "button");
     row.setAttribute("aria-label", "Abrir detalhes do contrato " + (record.contrato || record.id));
+    if (isHighRisk(record)) {
+      row.classList.add("contracts-table__row--risk");
+    }
+    if (isCriticalUrgency(record)) {
+      row.classList.add("contracts-table__row--critical");
+    }
 
     const contractCell = document.createElement("td");
     contractCell.className = "contracts-table__cell contracts-table__cell--contract mono";
@@ -543,6 +550,9 @@ export function createTableRenderer(options) {
     statusCell.dataset.label = "Status";
     const statusBadge = document.createElement("span");
     statusBadge.className = "status-badge " + (record.situacao ? record.situacao.badgeClass : "");
+    if (isCriticalUrgency(record)) {
+      statusBadge.classList.add("status-badge--critical");
+    }
     statusBadge.textContent = getBadgeLabel(record);
     statusBadge.title = getStatusTooltip(record);
     statusCell.appendChild(statusBadge);
@@ -577,6 +587,9 @@ export function createTableRenderer(options) {
 
       const status = document.createElement("span");
       status.className = "status-badge " + (record.situacao ? record.situacao.badgeClass : "");
+      if (isCriticalUrgency(record)) {
+        status.classList.add("status-badge--critical");
+      }
       status.textContent = getBadgeLabel(record);
       status.title = getStatusTooltip(record);
 
@@ -610,6 +623,9 @@ export function createTableRenderer(options) {
       due.textContent = getMobileDueLabel(record);
 
       card.classList.add(getCardToneClass(record));
+      if (isCriticalUrgency(record)) {
+        card.classList.add("contract-card--critical");
+      }
       footer.append(value, due);
       card.append(top, company, object, footer);
       wrap.appendChild(card);
@@ -898,6 +914,24 @@ function getCardToneClass(record) {
   }
 }
 
+function isHighRisk(record) {
+  return Boolean(
+    record &&
+    typeof record.dias_para_vencimento === "number" &&
+    record.dias_para_vencimento >= 0 &&
+    record.dias_para_vencimento <= 30
+  );
+}
+
+function isCriticalUrgency(record) {
+  return Boolean(
+    record &&
+    typeof record.dias_para_vencimento === "number" &&
+    record.dias_para_vencimento >= 0 &&
+    record.dias_para_vencimento <= 7
+  );
+}
+
 function getBadgeLabel(record) {
   if (!record || !record.situacao) {
     return "Sem vigência";
@@ -907,7 +941,7 @@ function getBadgeLabel(record) {
     case "vigente_regular":
       return "Vigente";
     case "vence_30":
-      return "Vence em ≤30d";
+      return "⚠️ Vence em ≤30d";
     case "vence_31_90":
       return "Vence 31-90d";
     case "encerrado":
@@ -939,6 +973,11 @@ function getStatusTooltip(record) {
 
   if (record.dias_para_vencimento < 0) {
     return "Encerrado há " + Math.abs(record.dias_para_vencimento) + " dias";
+  }
+
+  if (isCriticalUrgency(record)) {
+    return "Atenção crítica: vence em " + record.dias_para_vencimento + " dias" +
+      (record.vencimento ? " (" + formatDate(record.vencimento) + ")" : "");
   }
 
   return "Vence em " + record.dias_para_vencimento + " dias" +

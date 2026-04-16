@@ -10,7 +10,13 @@ export function createLoadingController(options) {
       body: document.body,
       scrollProgressBar: null,
       mainResultsContainer: null,
-      endedResultsContainer: null
+      endedResultsContainer: null,
+      radarTimeline: null,
+      radarList: null,
+      pendingList: null,
+      donutChart: null,
+      gaugeChart: null,
+      barsChart: null
     },
     options || {}
   );
@@ -19,6 +25,19 @@ export function createLoadingController(options) {
     entranceTimer: 0,
     scrollFrame: 0
   };
+
+  function getManagedContainers() {
+    return [
+      config.mainResultsContainer,
+      config.endedResultsContainer,
+      config.radarTimeline,
+      config.radarList,
+      config.pendingList,
+      config.donutChart,
+      config.gaugeChart,
+      config.barsChart
+    ].filter(Boolean);
+  }
 
   init();
 
@@ -60,7 +79,7 @@ export function createLoadingController(options) {
       return;
     }
 
-    [config.mainResultsContainer, config.endedResultsContainer].forEach(function (container) {
+    getManagedContainers().forEach(function (container) {
       if (container) {
         delete container.dataset.loadingSkeleton;
         container.removeAttribute("role");
@@ -74,10 +93,16 @@ export function createLoadingController(options) {
   function showSkeletons() {
     showTableSkeleton(config.mainResultsContainer, 2);
     showTableSkeleton(config.endedResultsContainer, 1);
+    showChartSkeleton(config.radarTimeline, "Carregando timeline de vencimentos");
+    showCardListSkeleton(config.radarList, 3, "Carregando alertas de vencimento");
+    showCardListSkeleton(config.pendingList, 4, "Carregando pendências cadastrais");
+    showChartSkeleton(config.donutChart, "Carregando gráfico de distribuição por tipo");
+    showChartSkeleton(config.gaugeChart, "Carregando medidor de completude");
+    showChartSkeleton(config.barsChart, "Carregando histórico anual");
   }
 
   function clearSkeletons() {
-    [config.mainResultsContainer, config.endedResultsContainer].forEach(function (container) {
+    getManagedContainers().forEach(function (container) {
       if (!container || container.dataset.loadingSkeleton !== "true") {
         return;
       }
@@ -280,6 +305,80 @@ function showTableSkeleton(container, groups) {
   container.setAttribute("aria-live", "polite");
   container.setAttribute("aria-busy", "true");
   container.setAttribute("aria-label", "Carregando contratos");
+}
+
+function showChartSkeleton(container, label) {
+  if (!container) {
+    return;
+  }
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "section-skeleton section-skeleton--chart";
+
+  const title = document.createElement("span");
+  title.className = "section-skeleton__line section-skeleton__line--title";
+
+  const frame = document.createElement("span");
+  frame.className = "section-skeleton__chart";
+
+  const footer = document.createElement("span");
+  footer.className = "section-skeleton__line section-skeleton__line--footer";
+
+  wrapper.append(title, frame, footer);
+  container.replaceChildren(wrapper);
+  container.dataset.loadingSkeleton = "true";
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-busy", "true");
+  container.setAttribute("aria-label", label || "Carregando gráfico");
+}
+
+function showCardListSkeleton(container, items, label) {
+  if (!container) {
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  const totalItems = Math.max(1, items || 1);
+
+  for (let index = 0; index < totalItems; index += 1) {
+    const article = document.createElement("article");
+    article.className = "section-skeleton section-skeleton--card";
+
+    const header = document.createElement("div");
+    header.className = "section-skeleton__row";
+
+    const title = document.createElement("span");
+    title.className = "section-skeleton__line section-skeleton__line--title";
+
+    const badge = document.createElement("span");
+    badge.className = "section-skeleton__line section-skeleton__line--badge";
+
+    header.append(title, badge);
+
+    const text = document.createElement("span");
+    text.className = "section-skeleton__line section-skeleton__line--text";
+
+    const meta = document.createElement("div");
+    meta.className = "section-skeleton__row";
+
+    const pillOne = document.createElement("span");
+    pillOne.className = "section-skeleton__line section-skeleton__line--pill";
+
+    const pillTwo = document.createElement("span");
+    pillTwo.className = "section-skeleton__line section-skeleton__line--pill section-skeleton__line--pill-short";
+
+    meta.append(pillOne, pillTwo);
+    article.append(header, text, meta);
+    fragment.appendChild(article);
+  }
+
+  container.replaceChildren(fragment);
+  container.dataset.loadingSkeleton = "true";
+  container.setAttribute("role", "status");
+  container.setAttribute("aria-live", "polite");
+  container.setAttribute("aria-busy", "true");
+  container.setAttribute("aria-label", label || "Carregando seção");
 }
 
 function flashCard(card, direction) {

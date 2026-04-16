@@ -42,7 +42,7 @@ import {
     ano: "",
     gestor: "",
     situacao: "",
-    ordenacao: "risco",
+    ordenacao: "vigencia",
     busca: "",
     pendencias: ""
   };
@@ -71,11 +71,11 @@ import {
   ];
 
   const ORDER_OPTIONS = [
-    { value: "risco", param: "risco", label: "Risco e vencimento" },
-    { value: "vigencia", param: "vigencia", label: "Data de vigência" },
+    { value: "risco", param: "risco", label: "Maior urgência" },
+    { value: "vigencia", param: "vigencia", label: "Vencimento mais próximo" },
     { value: "maior_valor", param: "maior-valor", label: "Maior valor" },
     { value: "menor_valor", param: "menor-valor", label: "Menor valor" },
-    { value: "fornecedor", param: "fornecedor", label: "Fornecedor A-Z" },
+    { value: "fornecedor", param: "fornecedor", label: "Empresa A-Z" },
     { value: "ano_desc", param: "ano-desc", label: "Ano mais recente" }
   ];
 
@@ -278,7 +278,13 @@ import {
       body: document.body,
       scrollProgressBar: DOM.scrollProgressBar,
       mainResultsContainer: DOM.gruposTipo,
-      endedResultsContainer: DOM.gruposEncerrados
+      endedResultsContainer: DOM.gruposEncerrados,
+      radarTimeline: DOM.radarTimeline,
+      radarList: DOM.radarList,
+      pendingList: DOM.pendenciasList,
+      donutChart: DOM.donutChart,
+      gaugeChart: DOM.gaugeChart,
+      barsChart: DOM.barsChart
     });
 
     state.tableRenderer = createTableRenderer({
@@ -305,6 +311,7 @@ import {
       copyButton: DOM.modalCopy,
       printButton: DOM.modalPrint,
       feedback: DOM.modalFeedback,
+      toast: DOM.toast,
       title: DOM.modalTitle,
       subtitle: DOM.modalSubtitle,
       status: DOM.modalStatus,
@@ -448,6 +455,7 @@ import {
         clearLoadMessage(DOM.loadMessage);
       }
     } catch (error) {
+      const loadFailure = getLoadFailureState(error);
       state.dataset = null;
       state.latestFiltered = [];
       state.filterCache.clear();
@@ -458,13 +466,17 @@ import {
           clearTables: true
         });
       }
-      renderLoadFailureView();
+      renderLoadFailureView(loadFailure);
       const retryButton = renderLoadMessage(DOM.loadMessage, {
         type: "error",
         title: "Não foi possível carregar os dados.",
         message: "Verifique a conexão e tente novamente.",
         actionLabel: "Tentar novamente",
-        actionId: "retry-carregar-dados"
+        actionId: "retry-carregar-dados",
+        title: loadFailure.bannerTitle,
+        message: loadFailure.bannerMessage,
+        linkLabel: loadFailure.linkLabel,
+        linkHref: loadFailure.linkHref
       });
 
       if (retryButton) {
@@ -1248,7 +1260,7 @@ import {
       state.filterCache.clear();
       refreshAllSelects();
       scheduleRender();
-    }, 250);
+    }, 300);
   }
 
   function handleSearchKeydown(event) {
@@ -1931,10 +1943,82 @@ import {
     }
   }
 
-  function renderLoadFailureView() {
+  function renderLoadFailureView(failureState) {
+    const loadFailure = failureState || getLoadFailureState();
+    const buildFailureState = function (message, role) {
+      return createMessageState({
+        title: loadFailure.sectionTitle,
+        message: message,
+        role: role || "status",
+        buttonLabel: role === "alert" ? "Tentar novamente" : "",
+        onClick: role === "alert" ? bootstrap : null,
+        linkLabel: loadFailure.linkLabel,
+        linkHref: loadFailure.linkHref
+      });
+    };
+
     if (state.tableRenderer) {
       state.tableRenderer.clear();
     }
+
+    if (DOM.gruposTipo) {
+      DOM.gruposTipo.replaceChildren(
+        buildFailureState(loadFailure.sectionMessage, "alert")
+      );
+    }
+
+    if (DOM.gruposEncerrados) {
+      DOM.gruposEncerrados.replaceChildren();
+    }
+
+    if (DOM.encerradosCounter) {
+      DOM.encerradosCounter.textContent = "0";
+    }
+
+    if (DOM.radarTimeline) {
+      DOM.radarTimeline.replaceChildren(
+        buildFailureState("Tente recarregar a página para exibir a timeline de vencimentos.")
+      );
+    }
+
+    if (DOM.radarList) {
+      DOM.radarList.replaceChildren(
+        buildFailureState("Tente recarregar a página para exibir os alertas de vencimento.")
+      );
+    }
+
+    if (DOM.pendenciasList) {
+      DOM.pendenciasList.replaceChildren(
+        buildFailureState("Tente recarregar a página para exibir as pendências cadastrais.")
+      );
+    }
+
+    [DOM.donutChart, DOM.gaugeChart, DOM.barsChart].forEach(function (container) {
+      if (!container) {
+        return;
+      }
+
+      container.replaceChildren(
+        buildFailureState("Tente recarregar a página para exibir os gráficos analíticos.")
+      );
+    });
+
+    if (DOM.distribuicaoTable) {
+      const tbody = DOM.distribuicaoTable.querySelector("tbody");
+      if (tbody) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.appendChild(
+          buildFailureState("Tente recarregar a página para exibir o resumo por tipo.")
+        );
+        row.appendChild(cell);
+        tbody.replaceChildren(row);
+      }
+    }
+
+    resetSummaryForLoadFailure();
+    return;
 
     if (DOM.gruposTipo) {
       DOM.gruposTipo.replaceChildren(
@@ -1943,7 +2027,11 @@ import {
           message: "Tente novamente para recarregar a listagem do painel.",
           buttonLabel: "Tentar novamente",
           role: "alert",
-          onClick: bootstrap
+          onClick: bootstrap,
+          title: loadFailure.sectionTitle,
+          message: loadFailure.sectionMessage,
+          linkLabel: loadFailure.linkLabel,
+          linkHref: loadFailure.linkHref
         })
       );
     }
@@ -2448,7 +2536,9 @@ import {
         message: "",
         buttonLabel: "",
         role: "status",
-        onClick: null
+        onClick: null,
+        linkLabel: "",
+        linkHref: ""
       },
       config || {}
     );
@@ -2468,21 +2558,63 @@ import {
 
     wrapper.append(title, message);
 
-    if (settings.buttonLabel && typeof settings.onClick === "function") {
+    if (
+      (settings.buttonLabel && typeof settings.onClick === "function") ||
+      (settings.linkLabel && settings.linkHref)
+    ) {
       const actions = document.createElement("div");
       actions.className = "empty-state__actions";
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "toolbar-button toolbar-button--primary";
-      button.textContent = settings.buttonLabel;
-      button.addEventListener("click", settings.onClick);
+      if (settings.linkLabel && settings.linkHref) {
+        const link = document.createElement("a");
+        link.className = "toolbar-button toolbar-button--ghost";
+        link.href = settings.linkHref;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = settings.linkLabel;
+        actions.appendChild(link);
+      }
 
-      actions.appendChild(button);
+      if (settings.buttonLabel && typeof settings.onClick === "function") {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "toolbar-button toolbar-button--primary";
+        button.textContent = settings.buttonLabel;
+        button.addEventListener("click", settings.onClick);
+        actions.appendChild(button);
+      }
+
       wrapper.appendChild(actions);
     }
 
     return wrapper;
+  }
+
+  function getLoadFailureState(error) {
+    const code = error && error.code ? String(error.code) : "";
+    const rawJsonUrl = buildRawJsonUrl();
+    const isProcessingError = code === "json_parse_failed" || code === "data_parse_failed";
+
+    return {
+      bannerTitle: isProcessingError
+        ? "Erro ao processar os dados"
+        : "Não foi possível carregar os dados",
+      bannerMessage: isProcessingError
+        ? "O arquivo contratos.json foi carregado, mas não pôde ser interpretado. Tente recarregar a página ou abra o JSON bruto."
+        : "Tente recarregar a página. Se o problema continuar, abra o JSON bruto como alternativa.",
+      sectionTitle: isProcessingError
+        ? "Erro ao processar os dados do painel."
+        : "Não foi possível carregar os dados do painel.",
+      sectionMessage: isProcessingError
+        ? "Tente recarregar a página para processar novamente o arquivo JSON."
+        : "Tente recarregar a página para restaurar a listagem e os gráficos.",
+      linkLabel: "Abrir JSON bruto",
+      linkHref: rawJsonUrl
+    };
+  }
+
+  function buildRawJsonUrl() {
+    return new URL("contratos.json", window.location.href).href;
   }
 
   function resetSummaryForLoadFailure() {

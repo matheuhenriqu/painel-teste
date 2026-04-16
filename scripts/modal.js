@@ -18,6 +18,7 @@ export function createModalController(options) {
       copyButton: null,
       printButton: null,
       feedback: null,
+      toast: null,
       title: null,
       subtitle: null,
       status: null,
@@ -59,6 +60,7 @@ export function createModalController(options) {
     isClosing: false,
     focusBeforeOpen: null,
     feedbackTimer: 0,
+    toastTimer: 0,
     bodyLockStyles: null,
     scrollY: 0
   };
@@ -363,6 +365,7 @@ export function createModalController(options) {
 
     try {
       await navigator.clipboard.writeText(url);
+      showToast("✓ Link copiado");
       showFeedback("Link copiado ✓");
     } catch (error) {
       showFeedback("Não foi possível copiar o link");
@@ -392,6 +395,20 @@ export function createModalController(options) {
     if (config.feedback) {
       config.feedback.textContent = "";
     }
+  }
+
+  function showToast(message) {
+    if (!config.toast) {
+      return;
+    }
+
+    window.clearTimeout(state.toastTimer);
+    config.toast.textContent = String(message || "");
+    config.toast.classList.add("is-visible");
+    state.toastTimer = window.setTimeout(function () {
+      config.toast.classList.remove("is-visible");
+      config.toast.textContent = "";
+    }, 3000);
   }
 
   function fillModal(record) {
