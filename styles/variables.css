@@ -51,7 +51,7 @@
 
   --page-width: 1280px;
   --header-height: 64px;
-  --sticky-offset: calc(var(--header-height) + var(--space-md));
+  --sticky-offset: 88px;
   --mobile-viewport-height: 100dvh;
   --mobile-overlay-offset-bottom: 0px;
   --filters-shell-height: 0px;
