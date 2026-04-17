@@ -210,7 +210,10 @@ export function renderTimeline(data, container, options) {
   const desc = createSvgElement("desc");
   const idBase = (container.id || "chart-timeline") + "-svg";
   const measuredWidth = Math.round(container.getBoundingClientRect().width || container.clientWidth || 0);
-  const width = Math.max(320, measuredWidth || 920);
+  const shouldScrollOnMobile = measuredWidth > 0 && measuredWidth < 768;
+  const width = shouldScrollOnMobile
+    ? Math.max(680, measuredWidth + 220)
+    : Math.max(320, measuredWidth || 920);
   const isCompact = width < 640;
   const padding = {
     top: isCompact ? 24 : 28,
@@ -237,6 +240,8 @@ export function renderTimeline(data, container, options) {
   svg.setAttribute("viewBox", "0 0 " + width + " " + height);
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-labelledby", idBase + "-title " + idBase + "-desc");
+  svg.style.width = width + "px";
+  svg.style.height = height + "px";
   title.id = idBase + "-title";
   desc.id = idBase + "-desc";
   title.textContent = "Timeline de vencimentos para os próximos noventa dias";
@@ -317,6 +322,13 @@ export function renderTimeline(data, container, options) {
   axis.setAttribute("class", "chart-axis");
   svg.appendChild(axis);
 
+  if (shouldScrollOnMobile) {
+    frame.classList.add("chart-frame--scrollable");
+    frame.setAttribute("role", "region");
+    frame.setAttribute("aria-label", "Timeline com rolagem horizontal");
+    frame.tabIndex = 0;
+  }
+
   urgent.forEach(function (record, index) {
     const cx = padding.left + (record.dias_para_vencimento / 90) * axisWidth;
     const laneIndex = index % laneCount;
@@ -357,7 +369,13 @@ export function renderTimeline(data, container, options) {
   });
 
   frame.append(svg);
-  container.append(frame, tooltip, createScreenReaderTable("Timeline de vencimentos", ["Contrato", "Empresa", "Dias", "Vencimento", "Valor"], urgent.map(function (record) {
+  container.append(
+    frame,
+    shouldScrollOnMobile
+      ? createScrollHint("Deslize horizontalmente para acompanhar os vencimentos.")
+      : document.createDocumentFragment(),
+    tooltip,
+    createScreenReaderTable("Timeline de vencimentos", ["Contrato", "Empresa", "Dias", "Vencimento", "Valor"], urgent.map(function (record) {
     return [
       getDisplayText(record.contrato),
       getDisplayText(record.empresa),
@@ -365,7 +383,8 @@ export function renderTimeline(data, container, options) {
       formatDate(record.vencimento),
       formatCurrency(record.valor)
     ];
-  })));
+  }))
+  );
 
   window.requestAnimationFrame(function () {
     bubbles.forEach(function (bubble) {
@@ -719,6 +738,12 @@ function createEmptyChart(title, message) {
 
 function createTooltip() {
   return createElement("div", "chart-tooltip");
+}
+
+function createScrollHint(text) {
+  const hint = createElement("p", "chart-scroll-hint", text);
+  hint.setAttribute("aria-hidden", "true");
+  return hint;
 }
 
 function bindInteractiveShape(element, config) {

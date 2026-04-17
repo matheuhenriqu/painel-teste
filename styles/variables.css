@@ -49,7 +49,7 @@
   --transition-base: 240ms ease;
   --transition-slow: 360ms ease;
 
-  --page-width: 1280px;
+  --page-width: 1360px;
   --header-height: 64px;
   --sticky-offset: 88px;
   --mobile-viewport-height: 100dvh;
