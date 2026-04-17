@@ -68,6 +68,7 @@ export function createTableRenderer(options) {
   );
 
   const visibleCountState = new Map();
+  let latestPayloadKey = "";
   let latestPayload = null;
 
   bindContainer(config.mainContainer, "ativos");
@@ -92,6 +93,17 @@ export function createTableRenderer(options) {
       },
       payload || {}
     );
+    const payloadKey = buildPayloadKey(
+      settings.records,
+      settings.order,
+      settings.searchQuery,
+      settings.disablePagination,
+      settings.expandAll
+    );
+    if (payloadKey !== latestPayloadKey) {
+      visibleCountState.clear();
+    }
+    latestPayloadKey = payloadKey;
     latestPayload = settings;
 
     const activeRecords = settings.records.filter(function (record) {
@@ -134,6 +146,7 @@ export function createTableRenderer(options) {
 
   function clear() {
     latestPayload = null;
+    latestPayloadKey = "";
     visibleCountState.clear();
     [config.mainContainer, config.endedContainer].forEach(function (container) {
       if (container) {
@@ -257,9 +270,8 @@ export function createTableRenderer(options) {
   }
 
   function handleLoadMore(button, container) {
-    const groupKey = button.dataset.groupKey || "";
     const totalItems = Number(button.dataset.totalItems || 0);
-    const storageKey = buildGroupStateKey(container, groupKey);
+    const storageKey = buildCollectionStateKey(container);
     const currentVisible = visibleCountState.get(storageKey) || PAGE_SIZE;
     const nextVisible = Math.min(totalItems, currentVisible + PAGE_SIZE);
 
@@ -270,17 +282,6 @@ export function createTableRenderer(options) {
     visibleCountState.set(storageKey, nextVisible);
     if (latestPayload) {
       render(latestPayload);
-    }
-
-    const scrollTarget = container.querySelector('[data-group-id="' + cssEscape(groupKey) + '"]') ||
-      button.closest(".contract-group");
-    if (scrollTarget) {
-      window.requestAnimationFrame(function () {
-        scrollTarget.scrollIntoView({
-          behavior: prefersReducedMotion() ? "auto" : "smooth",
-          block: "start"
-        });
-      });
     }
   }
 
@@ -303,28 +304,69 @@ export function createTableRenderer(options) {
       options || {}
     );
 
-    container.replaceChildren();
-
     if (!records.length) {
-      container.appendChild(
+      container.replaceChildren(
         createEmptyState(settings.emptyTitle, settings.emptyText, settings.emptySuggestion)
       );
       return;
     }
 
-    const groups = groupRecords(records);
-    groups.forEach(function (entry, index) {
-      container.appendChild(
-        createGroup(entry, {
-          index: index,
+    const collectionStateKey = buildCollectionStateKey(container);
+    const visibleItems = settings.disablePagination
+      ? records.length
+      : Math.min(records.length, Math.max(PAGE_SIZE, visibleCountState.get(collectionStateKey) || PAGE_SIZE));
+    const visibleRecords = settings.disablePagination ? records.slice() : records.slice(0, visibleItems);
+    const allGroups = groupRecords(records);
+    const totalsByType = new Map();
+    const visibleByType = new Map();
+    const fragment = document.createDocumentFragment();
+
+    visibleCountState.set(collectionStateKey, visibleItems);
+    allGroups.forEach(function (entry) {
+      totalsByType.set(entry.tipo, entry.records);
+    });
+    visibleRecords.forEach(function (record) {
+      const key = String(record.tipo || "SEM TIPO").trim() || "SEM TIPO";
+      if (!visibleByType.has(key)) {
+        visibleByType.set(key, []);
+      }
+      visibleByType.get(key).push(record);
+    });
+
+    let groupIndex = 0;
+    allGroups.forEach(function (entry) {
+      if (!visibleByType.has(entry.tipo)) {
+        return;
+      }
+
+      fragment.appendChild(
+        createGroup({
+          tipo: entry.tipo,
+          records: visibleByType.get(entry.tipo) || [],
+          allRecords: totalsByType.get(entry.tipo) || entry.records
+        }, {
+          index: groupIndex,
           collectionKey: settings.collectionKey,
           order: settings.order,
           searchQuery: settings.searchQuery,
           disablePagination: settings.disablePagination,
           expandAll: settings.expandAll
-        }, container)
+        })
       );
+      groupIndex += 1;
     });
+
+    if (!settings.disablePagination && records.length > visibleItems) {
+      fragment.appendChild(
+        createLoadMore({
+          collectionKey: settings.collectionKey,
+          totalItems: records.length,
+          visibleItems: visibleItems
+        })
+      );
+    }
+
+    container.replaceChildren(fragment);
   }
 
   function groupRecords(records) {
@@ -358,22 +400,14 @@ export function createTableRenderer(options) {
       });
   }
 
-  function createGroup(entry, context, container) {
+  function createGroup(entry, context) {
     const article = document.createElement("article");
     const typeSlug = slugify(entry.tipo || "sem-tipo");
     const groupStorageKey = context.collectionKey + "::" + typeSlug;
     const expanded = context.expandAll ? true : readCollapsedState(groupStorageKey, context.index === 0);
-    const totalValue = sumValues(entry.records);
+    const allRecords = entry.allRecords || entry.records;
+    const totalValue = sumValues(allRecords);
     const groupId = "grupo-" + context.collectionKey + "-" + typeSlug;
-    const groupStateKey = buildGroupStateKey(container, groupStorageKey);
-    const visibleCount = context.disablePagination
-      ? entry.records.length
-      : clamp(visibleCountState.get(groupStateKey) || PAGE_SIZE, PAGE_SIZE, entry.records.length);
-    const pageRecords = context.disablePagination
-      ? entry.records.slice()
-      : entry.records.slice(0, visibleCount);
-
-    visibleCountState.set(groupStateKey, visibleCount);
 
     article.className = "contract-group";
     article.dataset.groupId = groupStorageKey;
@@ -412,7 +446,7 @@ export function createTableRenderer(options) {
     const summaryText = document.createElement("span");
     summaryText.className = "contract-group__summary-text mono";
     summaryText.textContent =
-      formatCount(entry.records.length) + " \u00b7 " + formatCompactCurrency(totalValue);
+      formatCount(allRecords.length) + " \u00b7 " + formatCompactCurrency(totalValue);
 
     const chevron = document.createElement("span");
     chevron.className = "contract-group__chevron mono";
@@ -427,18 +461,8 @@ export function createTableRenderer(options) {
     body.id = groupId;
     body.hidden = !expanded;
 
-    body.appendChild(createDesktopTable(entry.tipo, pageRecords, context.order, context.searchQuery));
-    body.appendChild(createMobileCards(pageRecords, context.searchQuery));
-
-    if (!context.disablePagination && entry.records.length > visibleCount) {
-      body.appendChild(
-        createLoadMore({
-          groupKey: groupStorageKey,
-          totalItems: entry.records.length,
-          visibleItems: visibleCount
-        })
-      );
-    }
+    body.appendChild(createDesktopTable(entry.tipo, entry.records, context.order, context.searchQuery));
+    body.appendChild(createMobileCards(entry.records, context.searchQuery));
 
     article.append(toggle, body);
     return article;
@@ -649,7 +673,7 @@ export function createTableRenderer(options) {
 
     const text = document.createElement("p");
     text.className = "group-pagination__info";
-    text.textContent = "Mostrando " + info.visibleItems + " de " + info.totalItems;
+    text.textContent = "Mostrando " + info.visibleItems + " de " + info.totalItems + " contratos";
 
     const actions = document.createElement("div");
     actions.className = "group-pagination__actions";
@@ -658,9 +682,9 @@ export function createTableRenderer(options) {
     next.type = "button";
     next.className = "group-pagination__button";
     next.dataset.loadMore = "true";
-    next.dataset.groupKey = info.groupKey;
+    next.dataset.collectionKey = info.collectionKey || "";
     next.dataset.totalItems = String(info.totalItems);
-    next.textContent = "Mostrar mais";
+    next.textContent = "Mostrar mais 20";
 
     actions.append(next);
     wrapper.append(text, actions);
@@ -1053,8 +1077,20 @@ function formatCount(count) {
   return count + (count === 1 ? " contrato" : " contratos");
 }
 
-function buildGroupStateKey(container, groupKey) {
-  return (container ? container.id : "grupo") + "::" + groupKey;
+function buildCollectionStateKey(container) {
+  return container ? container.id : "grupo";
+}
+
+function buildPayloadKey(records, order, searchQuery, disablePagination, expandAll) {
+  return [
+    order || "",
+    normalizeText(searchQuery || ""),
+    disablePagination ? "print" : "interactive",
+    expandAll ? "expand" : "collapse",
+    records.map(function (record) {
+      return record && record.id != null ? String(record.id) : "";
+    }).join(",")
+  ].join("|");
 }
 
 function clamp(value, min, max) {

@@ -6,12 +6,6 @@ import {
   renderLoadMessage,
   setKpiLoading
 } from "./data.js";
-import {
-  renderBars,
-  renderDonut,
-  renderGauge,
-  renderTimeline
-} from "./charts.js";
 import { applyIndicators } from "./indicators.js";
 import { createExportController } from "./export.js";
 import { createLoadingController } from "./loading.js";
@@ -254,7 +248,13 @@ import {
     resultsViewMode: readResultsViewMode(),
     viewportWidth: window.innerWidth || document.documentElement.clientWidth || 0,
     viewportMetricsFrame: 0,
-    stickyFallbackBound: false
+    stickyFallbackBound: false,
+    chartModule: null,
+    chartModulePromise: null,
+    chartRenderToken: 0,
+    deferredChartsFrame: 0,
+    deferredChartsIdle: 0,
+    deferredChartsTimeout: 0
   };
 
   init();
@@ -464,6 +464,8 @@ import {
       state.dataset = null;
       state.latestFiltered = [];
       state.filterCache.clear();
+      state.chartRenderToken += 1;
+      cancelDeferredCharts();
       clearKpiLoading(document);
       disableControls(true);
       if (state.loadingController) {
@@ -1739,6 +1741,10 @@ import {
       },
       options || {}
     );
+    const renderToken = state.chartRenderToken + 1;
+
+    state.chartRenderToken = renderToken;
+    cancelDeferredCharts();
 
     const records = getFilteredRecords({
       filters: state.filters
@@ -1751,11 +1757,8 @@ import {
     syncFiltersShellMetrics();
     renderKpis(records);
     if (!settings.printMode) {
-      renderRadar(records);
+      renderRadarSummary(records);
       renderPendencias(records);
-    }
-    if (!settings.printMode && canRenderLazySection(DOM.distribuicaoSection)) {
-      renderDistribuicao(records);
     }
     if (settings.printMode || canRenderLazySection(DOM.resultsSection)) {
       state.tableRenderer.render({
@@ -1782,6 +1785,410 @@ import {
     if (settings.syncModalFromUrl) {
       syncModalFromUrl();
     }
+
+    if (!settings.printMode) {
+      scheduleDeferredCharts(records, {
+        token: renderToken,
+        renderRadar: true,
+        renderDistribuicao: canRenderLazySection(DOM.distribuicaoSection)
+      });
+    }
+  }
+
+  function scheduleDeferredCharts(records, options) {
+    const settings = Object.assign(
+      {
+        token: state.chartRenderToken,
+        renderRadar: true,
+        renderDistribuicao: false
+      },
+      options || {}
+    );
+
+    if (settings.renderRadar) {
+      markDeferredChartPending(DOM.radarTimeline, "Atualizando timeline de vencimentos");
+    }
+    if (settings.renderDistribuicao) {
+      markDeferredChartPending(DOM.donutChart, "Atualizando distribuição por tipo");
+      markDeferredChartPending(DOM.gaugeChart, "Atualizando completude cadastral");
+      markDeferredChartPending(DOM.barsChart, "Atualizando contratos por ano");
+    }
+
+    state.deferredChartsFrame = window.requestAnimationFrame(function () {
+      state.deferredChartsFrame = 0;
+
+      if ("requestIdleCallback" in window) {
+        state.deferredChartsIdle = window.requestIdleCallback(function () {
+          state.deferredChartsIdle = 0;
+          runDeferredCharts(records, settings);
+        }, {
+          timeout: 220
+        });
+        return;
+      }
+
+      state.deferredChartsTimeout = window.setTimeout(function () {
+        state.deferredChartsTimeout = 0;
+        runDeferredCharts(records, settings);
+      }, 48);
+    });
+  }
+
+  async function runDeferredCharts(records, options) {
+    const settings = Object.assign(
+      {
+        token: state.chartRenderToken,
+        renderRadar: true,
+        renderDistribuicao: false
+      },
+      options || {}
+    );
+
+    if (settings.token !== state.chartRenderToken || state.isPrinting) {
+      clearDeferredChartState(settings);
+      return;
+    }
+
+    try {
+      const chartsModule = await loadChartsModule();
+
+      if (settings.token !== state.chartRenderToken || state.isPrinting) {
+        clearDeferredChartState(settings);
+        return;
+      }
+
+      if (settings.renderRadar) {
+        renderRadarChart(records, chartsModule);
+      }
+      if (settings.renderDistribuicao) {
+        renderDistribuicaoDeferred(records, chartsModule);
+      }
+    } catch (error) {
+      console.error("Falha ao carregar os gráficos do painel.", error);
+    } finally {
+      clearDeferredChartState(settings);
+    }
+  }
+
+  function cancelDeferredCharts() {
+    if (state.deferredChartsFrame) {
+      window.cancelAnimationFrame(state.deferredChartsFrame);
+      state.deferredChartsFrame = 0;
+    }
+
+    if (state.deferredChartsIdle && "cancelIdleCallback" in window) {
+      window.cancelIdleCallback(state.deferredChartsIdle);
+      state.deferredChartsIdle = 0;
+    }
+
+    if (state.deferredChartsTimeout) {
+      window.clearTimeout(state.deferredChartsTimeout);
+      state.deferredChartsTimeout = 0;
+    }
+  }
+
+  function markDeferredChartPending(container, label) {
+    if (!container) {
+      return;
+    }
+
+    container.setAttribute("aria-busy", "true");
+    if (label) {
+      container.setAttribute("aria-label", label);
+    }
+  }
+
+  function clearDeferredChartPending(container) {
+    if (!container) {
+      return;
+    }
+
+    container.removeAttribute("aria-busy");
+    if (container.dataset.loadingSkeleton !== "true") {
+      container.removeAttribute("aria-label");
+    }
+  }
+
+  function clearDeferredChartState(settings) {
+    if (settings && typeof settings.token === "number" && settings.token !== state.chartRenderToken) {
+      return;
+    }
+
+    if (settings.renderRadar) {
+      clearDeferredChartPending(DOM.radarTimeline);
+    }
+    if (settings.renderDistribuicao) {
+      clearDeferredChartPending(DOM.donutChart);
+      clearDeferredChartPending(DOM.gaugeChart);
+      clearDeferredChartPending(DOM.barsChart);
+    }
+  }
+
+  async function loadChartsModule() {
+    if (state.chartModule) {
+      return state.chartModule;
+    }
+
+    if (!state.chartModulePromise) {
+      state.chartModulePromise = import("./charts.js").then(function (module) {
+        state.chartModule = module;
+        return module;
+      });
+    }
+
+    return state.chartModulePromise;
+  }
+
+  function renderTimeline(records, container, options) {
+    loadChartsModule().then(function (chartsModule) {
+      if (chartsModule && typeof chartsModule.renderTimeline === "function") {
+        chartsModule.renderTimeline(records, container, options);
+      }
+    }).catch(function (error) {
+      console.error("Falha ao carregar a timeline do painel.", error);
+    });
+  }
+
+  function renderDonut(records, container, options) {
+    loadChartsModule().then(function (chartsModule) {
+      if (chartsModule && typeof chartsModule.renderDonut === "function") {
+        chartsModule.renderDonut(records, container, options);
+      }
+    }).catch(function (error) {
+      console.error("Falha ao carregar o gráfico donut.", error);
+    });
+  }
+
+  function renderBars(records, container, options) {
+    loadChartsModule().then(function (chartsModule) {
+      if (chartsModule && typeof chartsModule.renderBars === "function") {
+        chartsModule.renderBars(records, container, options);
+      }
+    }).catch(function (error) {
+      console.error("Falha ao carregar o gráfico de barras.", error);
+    });
+  }
+
+  function renderGauge(value, container, options) {
+    loadChartsModule().then(function (chartsModule) {
+      if (chartsModule && typeof chartsModule.renderGauge === "function") {
+        chartsModule.renderGauge(value, container, options);
+      }
+    }).catch(function (error) {
+      console.error("Falha ao carregar o gauge de completude.", error);
+    });
+  }
+
+  function renderRadarSummary(records) {
+    if (!DOM.radarSection || !DOM.radarList || !DOM.templates.radarCard) {
+      return;
+    }
+
+    const urgent = getRadarUrgentRecords(records);
+
+    setSectionEmptyState(DOM.radarSection, urgent.length === 0);
+    if (DOM.radarCounter) {
+      DOM.radarCounter.textContent = String(urgent.length);
+    }
+
+    DOM.radarList.replaceChildren();
+
+    if (!urgent.length) {
+      DOM.radarList.appendChild(
+        createMessageState({
+          title: records.length === 0
+            ? "Nenhum contrato corresponde aos filtros selecionados."
+            : "Nenhum contrato com vencimento nos próximos 90 dias.",
+          message: records.length === 0
+            ? "Ajuste ou limpe os filtros para voltar a exibir os alertas."
+            : "Quando houver contratos nessa janela, os alertas aparecerão aqui."
+        })
+      );
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    urgent.forEach(function (record) {
+      const cardFragment = DOM.templates.radarCard.content.cloneNode(true);
+      const card = cardFragment.querySelector(".urgent-card");
+      const company = cardFragment.querySelector(".urgent-card__company");
+      const status = cardFragment.querySelector(".status-badge");
+      const object = cardFragment.querySelector(".urgent-card__object");
+      const pills = cardFragment.querySelectorAll(".pill");
+      const urgencyClass = record.dias_para_vencimento <= 15
+        ? "urgent-card--critical"
+        : record.dias_para_vencimento <= 45
+          ? "urgent-card--warning"
+          : "urgent-card--watch";
+
+      card.classList.add(urgencyClass);
+      card.dataset.contractId = String(record.id);
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", "Abrir detalhes do contrato " + (record.contrato || record.id));
+
+      setHighlightedContent(company, getDisplayText(record.empresa), state.filters.busca);
+      status.className = "status-badge " + record.situacao.badgeClass;
+      status.textContent = "Vence em " + record.dias_para_vencimento + " dias";
+      status.setAttribute("aria-label", status.textContent);
+      setHighlightedContent(object, truncateText(record.objeto || "Não informado", 84), state.filters.busca);
+
+      if (pills[0]) {
+        pills[0].textContent = formatOptionalCurrency(record.valor, record.valor_informado, "—");
+      }
+      if (pills[1]) {
+        pills[1].textContent = titleCase(record.tipo || "Sem tipo");
+      }
+
+      fragment.appendChild(cardFragment);
+    });
+
+    DOM.radarList.appendChild(fragment);
+  }
+
+  function renderRadarChart(records, chartsModule) {
+    if (!DOM.radarTimeline || !chartsModule || typeof chartsModule.renderTimeline !== "function") {
+      return;
+    }
+
+    const urgent = getRadarUrgentRecords(records);
+
+    chartsModule.renderTimeline(records, DOM.radarTimeline, {
+      emptyTitle: records.length === 0
+        ? "Nenhum contrato corresponde aos filtros selecionados."
+        : "Nenhum vencimento nos próximos 90 dias.",
+      emptyMessage: records.length === 0
+        ? "Ajuste ou limpe os filtros para visualizar a timeline."
+        : "Quando houver contratos nessa janela, a timeline mostrará os pontos de risco aqui.",
+      onContractSelect: function (contractId) {
+        if (state.modalController) {
+          state.modalController.openById(contractId, {
+            syncUrl: true,
+            replaceUrl: false
+          });
+        }
+      }
+    });
+    setChartSummary(DOM.radarTimeline, buildTimelineChartSummary(records, urgent));
+  }
+
+  function renderDistribuicaoDeferred(records, chartsModule) {
+    if (!DOM.distribuicaoSection || !DOM.distribuicaoTable || !chartsModule) {
+      return;
+    }
+
+    const totals = new Map();
+    const completeCount = records.filter(function (record) {
+      return record.campos_pendentes.length === 0;
+    }).length;
+
+    records.forEach(function (record) {
+      const key = record.tipo || "Sem tipo";
+      if (!totals.has(key)) {
+        totals.set(key, {
+          quantidade: 0,
+          valor: 0
+        });
+      }
+      const bucket = totals.get(key);
+      bucket.quantidade += 1;
+      bucket.valor += record.valor || 0;
+    });
+
+    setSectionEmptyState(DOM.distribuicaoSection, records.length === 0);
+    if (DOM.distribuicaoCounter) {
+      DOM.distribuicaoCounter.textContent = String(totals.size);
+    }
+
+    chartsModule.renderDonut(records, DOM.donutChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
+      onTypeSelect: applyTypeFilter
+    });
+    chartsModule.renderBars(records, DOM.barsChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
+      onTypeSelect: applyTypeFilter
+    });
+    chartsModule.renderGauge(getCompletenessPercent(records), DOM.gaugeChart, {
+      emptyTitle: "Nenhum contrato corresponde aos filtros selecionados.",
+      emptyMessage: "Ajuste ou limpe os filtros para voltar a exibir este gráfico.",
+      completeCount: completeCount,
+      totalCount: records.length
+    });
+
+    const sortedTotals = Array.from(totals.entries())
+      .sort(function (a, b) {
+        return b[1].quantidade - a[1].quantidade || compareText(a[0], b[0]);
+      });
+
+    setChartSummary(DOM.donutChart, buildDistributionChartSummary(sortedTotals, records.length));
+    setChartSummary(DOM.gaugeChart, buildGaugeChartSummary(completeCount, records.length));
+    setChartSummary(DOM.barsChart, buildYearChartSummary(records));
+
+    const tbody = DOM.distribuicaoTable.querySelector("tbody");
+    if (!tbody) {
+      return;
+    }
+
+    tbody.replaceChildren();
+    const rowsFragment = document.createDocumentFragment();
+
+    sortedTotals.forEach(function (entry) {
+      const row = document.createElement("tr");
+
+      const typeCell = document.createElement("td");
+      typeCell.dataset.label = "Tipo";
+      typeCell.textContent = titleCase(entry[0]);
+
+      const countCell = document.createElement("td");
+      countCell.dataset.label = "Qtd";
+      countCell.className = "mono";
+      countCell.textContent = String(entry[1].quantidade);
+
+      const valueCell = document.createElement("td");
+      valueCell.dataset.label = "Valor total";
+      valueCell.className = "mono";
+      valueCell.textContent = formatCurrency(entry[1].valor);
+
+      const percentCell = document.createElement("td");
+      percentCell.dataset.label = "%";
+      percentCell.textContent = records.length
+        ? ((entry[1].quantidade / records.length) * 100).toFixed(1).replace(".", ",") + "%"
+        : "0,0%";
+
+      row.append(typeCell, countCell, valueCell, percentCell);
+      rowsFragment.appendChild(row);
+    });
+
+    if (!rowsFragment.childNodes.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 4;
+      cell.dataset.label = "Tipo";
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.setAttribute("role", "status");
+      empty.setAttribute("aria-live", "polite");
+      empty.textContent = "Nenhum contrato corresponde aos filtros selecionados.";
+      cell.appendChild(empty);
+      row.appendChild(cell);
+      rowsFragment.appendChild(row);
+    }
+
+    tbody.appendChild(rowsFragment);
+  }
+
+  function getRadarUrgentRecords(records) {
+    return records
+      .filter(function (record) {
+        return record.dias_para_vencimento != null &&
+          record.dias_para_vencimento >= 0 &&
+          record.dias_para_vencimento <= 90;
+      })
+      .sort(compareByRisk)
+      .slice(0, 6);
   }
 
   function getFilteredRecords(config) {
@@ -2337,14 +2744,7 @@ import {
       return;
     }
 
-    const urgent = records
-      .filter(function (record) {
-        return record.dias_para_vencimento != null &&
-          record.dias_para_vencimento >= 0 &&
-          record.dias_para_vencimento <= 90;
-      })
-      .sort(compareByRisk)
-      .slice(0, 6);
+    const urgent = getRadarUrgentRecords(records);
 
     setSectionEmptyState(DOM.radarSection, urgent.length === 0);
     if (DOM.radarCounter) {
@@ -2453,11 +2853,13 @@ import {
       return;
     }
 
+    const fragment = document.createDocumentFragment();
+
     pendentes.forEach(function (record) {
-      const fragment = DOM.templates.pendenciaItem.content.cloneNode(true);
-      const item = fragment.querySelector(".pending-item");
-      const title = fragment.querySelector(".pending-item__title");
-      const badges = fragment.querySelector(".pending-item__badges");
+      const itemFragment = DOM.templates.pendenciaItem.content.cloneNode(true);
+      const item = itemFragment.querySelector(".pending-item");
+      const title = itemFragment.querySelector(".pending-item__title");
+      const badges = itemFragment.querySelector(".pending-item__badges");
 
       item.dataset.contractId = String(record.id);
       item.tabIndex = 0;
@@ -2478,8 +2880,10 @@ import {
         badges.appendChild(badge);
       });
 
-      DOM.pendenciasList.appendChild(fragment);
+      fragment.appendChild(itemFragment);
     });
+
+    DOM.pendenciasList.appendChild(fragment);
   }
 
   function renderDistribuicao(records) {

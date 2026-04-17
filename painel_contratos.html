@@ -24,8 +24,10 @@
   <link rel="stylesheet" href="styles/base.css">
   <link rel="stylesheet" href="styles/layout.css">
   <link rel="stylesheet" href="styles/components.css">
-  <link rel="stylesheet" href="styles/charts.css">
-  <link rel="stylesheet" href="styles/responsive.css">
+  <link rel="preload" href="styles/charts.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="styles/responsive.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="styles/charts.css"></noscript>
+  <noscript><link rel="stylesheet" href="styles/responsive.css"></noscript>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
