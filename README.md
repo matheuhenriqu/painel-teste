@@ -1,6 +1,6 @@
-# Painel de Contratos de Iguape
+# Painel de Contratos
 
-Painel publico de contratos administrativos da Prefeitura Municipal de Iguape/SP, publicado como site estatico no GitHub Pages.
+Painel publico de contratos administrativos da prefeitura municipal, publicado como site estatico no GitHub Pages.
 
 Os dados exibidos em `painel_contratos.html` sao lidos de `contratos.json` via `fetch()`. Nao ha backend nem dependencias pesadas, o que mantem a hospedagem simples e compativel com a raiz da branch `main`.
 
